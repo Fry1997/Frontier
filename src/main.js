@@ -1,0 +1,213 @@
+// main — composition root. Builds the runtime (state + module instances),
+// wires the bus, and runs the fixed update order (§2.4):
+//   input → time → world/resources → player → critters → sim → fx → ui
+// Render runs after. No game logic lives here — only wiring.
+
+import { createBus } from './core/bus.js';
+import { createRng } from './core/rng.js';
+import { createState } from './core/state.js';
+import { createLoop } from './core/loop.js';
+import { createTileMap } from './world/tiles.js';
+import * as timeSys from './world/time.js';
+import { createResources } from './world/resources.js';
+import * as playerSys from './entities/player.js';
+import { createRabbits } from './entities/rabbits.js';
+import * as crafting from './sim/crafting.js';
+import * as building from './sim/building.js';
+import * as needs from './sim/needs.js';
+import { createQuests } from './sim/quests.js';
+import * as saveio from './io/save.js';
+import { createInput } from './io/input.js';
+import { createRenderer } from './render/render.js';
+import { createFx } from './render/fx.js';
+import { createHud } from './render/hud.js';
+import { createUI } from './ui/ui.js';
+import { SFX, attachAudio } from './audio/sfx.js';
+import { PALETTES, HAIRS, buildSprites } from './assets/sprites.js';
+
+const wrap = document.getElementById('wrap');
+const ui = createUI(wrap);
+const bus = createBus();
+
+// --- settings (persist independently of the world save) ---
+const stored = saveio.loadSettings();
+let palKey = PALETTES[stored.palette] ? stored.palette : 'meadow';
+let hairKey = HAIRS.some(h => h.key === stored.hair) ? stored.hair : 'scruff';
+
+const spCache = {};
+const getSprites = (pk, hk) => (spCache[pk + ':' + hk] ||= buildSprites(PALETTES[pk], hk));
+
+const sfx = attachAudio(bus, new SFX());
+sfx.setMuted(!!stored.muted);
+
+// --- the runtime: everything systems need, one seam ---
+const rt = {
+  state: null,
+  bus,
+  rng: createRng((Math.random() * 0x7fffffff) | 0),
+  session: null, // transient, never saved
+  tiles: null,
+  rabbits: null,
+  input: null,
+  fx: null,
+  hud: null,
+  quests: null,
+  els: ui.els,
+  view: {
+    palKey, hairKey,
+    get pal() { return PALETTES[this.palKey]; },
+    sprites: getSprites(palKey, hairKey),
+  },
+};
+
+rt.input = createInput({ bus, els: ui.els, isActive: () => rt.session?.phase === 'game' });
+rt.fx = createFx(rt);
+rt.hud = createHud(rt);
+const renderer = createRenderer(rt);
+
+function freshSession() {
+  return {
+    phase: 'title',
+    gt: 0,
+    craftOpen: false,
+    placing: null,
+    player: { animT: 0, actT: 0, cookT: 0, moving: false, swingCb: null },
+  };
+}
+rt.session = freshSession();
+
+let resources = null, autosave = null;
+
+function attachState(state) {
+  rt.state = state;
+  rt.rng = createRng(state.seed ^ (state.time.day * 2654435761));
+  rt.tiles = createTileMap(state);
+  rt.rabbits = createRabbits(rt);
+  rt.quests = createQuests(rt);
+  resources = createResources(rt);
+  if (autosave) autosave.detach();
+  autosave = saveio.attach(rt);
+  rt.fx.reset();
+  // settings ride along inside the save; the UI prefs win
+  state.settings.palette = rt.view.palKey;
+  state.settings.hair = rt.view.hairKey;
+  state.settings.muted = sfx.muted;
+}
+
+function persistSettings() {
+  saveio.saveSettings({ palette: rt.view.palKey, hair: rt.view.hairKey, muted: sfx.muted });
+  if (rt.state) {
+    rt.state.settings.palette = rt.view.palKey;
+    rt.state.settings.hair = rt.view.hairKey;
+    rt.state.settings.muted = sfx.muted;
+  }
+}
+
+function setPalette(k) {
+  if (!PALETTES[k]) return;
+  rt.view.palKey = k;
+  rt.view.sprites = getSprites(k, rt.view.hairKey);
+  persistSettings();
+  bus.emit('ui:update', {});
+}
+
+function setHair(k) {
+  if (!HAIRS.some(h => h.key === k)) return;
+  rt.view.hairKey = k;
+  rt.view.sprites = getSprites(rt.view.palKey, k);
+  persistSettings();
+  bus.emit('ui:update', {});
+}
+
+// --- ui handlers ---
+ui.wire(rt, {
+  onStart({ fresh }) {
+    sfx.ensure();
+    let state = null;
+    if (!fresh) state = saveio.load();
+    if (!state) {
+      saveio.clearSave();
+      state = createState({ settings: { palette: rt.view.palKey, hair: rt.view.hairKey, muted: sfx.muted } });
+    } else {
+      // a loaded world remembers its own look unless the title changed it
+      if (PALETTES[state.settings.palette]) setPalette(state.settings.palette);
+      if (HAIRS.some(h => h.key === state.settings.hair)) setHair(state.settings.hair);
+    }
+    attachState(state);
+    rt.session = freshSession();
+    rt.session.phase = 'game';
+    ui.hideTitle();
+    sfx.quest();
+    bus.emit('ui:update', {});
+  },
+  onAction() { sfx.ensure(); playerSys.doAction(rt); },
+  onCraftToggle() {
+    sfx.ensure();
+    if (rt.session.placing) { crafting.cancelPlace(rt); return; }
+    rt.session.craftOpen = !rt.session.craftOpen;
+    bus.emit('ui:click', {});
+    bus.emit('ui:update', {});
+  },
+  onCraft(id) { crafting.craftItem(rt, id); },
+  onCancelPlace() { crafting.cancelPlace(rt); },
+  onCyclePalette() {
+    const ks = Object.keys(PALETTES);
+    setPalette(ks[(ks.indexOf(rt.view.palKey) + 1) % ks.length]);
+    bus.emit('ui:click', {});
+  },
+  onPickPalette(k) { setPalette(k); },
+  onPickHair(k) { setHair(k); },
+  onToggleSound() {
+    sfx.setMuted(!sfx.muted);
+    persistSettings();
+    if (!sfx.muted) { sfx.ensure(); sfx.ui(); }
+    bus.emit('ui:update', {});
+  },
+});
+
+// --- keyboard intents ---
+bus.on('input:action', () => { sfx.ensure(); playerSys.doAction(rt); });
+bus.on('input:craftToggle', () => {
+  if (rt.session.placing) { crafting.cancelPlace(rt); return; }
+  rt.session.craftOpen = !rt.session.craftOpen;
+  bus.emit('ui:update', {});
+});
+bus.on('input:cancel', () => {
+  if (rt.session.placing) crafting.cancelPlace(rt);
+  else if (rt.session.craftOpen) { rt.session.craftOpen = false; bus.emit('ui:update', {}); }
+});
+bus.on('input:palette', () => {
+  const ks = Object.keys(PALETTES);
+  setPalette(ks[(ks.indexOf(rt.view.palKey) + 1) % ks.length]);
+});
+bus.on('input:mute', () => {
+  sfx.setMuted(!sfx.muted);
+  persistSettings();
+  bus.emit('ui:update', {});
+});
+
+// --- the loop: fixed update order ---
+const loop = createLoop({
+  update(dt) {
+    rt.session.gt += dt;
+    if (rt.session.phase !== 'game' || !rt.state) return;
+    timeSys.update(rt.state, dt, bus);   // time
+    resources.update(dt);                // world / resource renewal
+    playerSys.update(rt, dt);            // player (+ drops pickup)
+    rt.rabbits.update(dt);               // critters
+    building.update(rt, dt);             // sim: construction sites, home flag
+    needs.update(rt.state, dt);          // sim: needs decay
+    rt.quests.update(dt);                // sim: quest chain
+    autosave.update(dt);                 // io: periodic save
+    rt.fx.update(dt);                    // transient visuals
+    rt.hud.update(dt);
+    ui.tick();                           // action button label
+  },
+  render: renderer.render,
+});
+
+ui.showTitle({ hasSave: saveio.hasSave() });
+loop.start();
+
+// dev/testing hook (used by the smoke test; not part of the module contract)
+window.__frontier = rt;
