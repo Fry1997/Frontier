@@ -10,9 +10,17 @@ npx serve .        # or: python3 -m http.server
 
 Move with WASD / left-thumb joystick, act with **E** / the action button, craft with **C**.
 
-## Status — Phase 1 complete (Foundation refactor + persistence)
+## Status — Phase 2 complete (Bigger world + content-data layer)
 
-The prototype's single ~930-line engine has been split into the module architecture from
+New in Phase 2:
+
+- **Greenwood** (`src/content/maps.js`) — a 44×34 hand-authored map (~2.9× the prototype): dense NW forest with carved paths, NE rocky outcrop, SW lake, central meadow camp. Validated for connectivity (every starter drop reachable, 225 choppable trees, drinkable lake edge, clear shelter room by the camp). New camps start here; the original `meadow-vale` stays in content so old saves keep loading (saves reference `baseMapId`).
+- **Zone tags** — maps carry `zones` rects (forest/rock/lake/meadow) with a `zoneAt` helper; ambient resource respawns are zone-weighted (sticks prefer forest trees, stones prefer rock-zone boulders), with per-map `resourceCaps`.
+- **Objects as content** (`src/content/objects.js`) — passability, choppability, hp, and resource-source mappings are data; collision and the action resolver read them instead of hardcoding type lists.
+
+## Phase 1 (Foundation refactor + persistence)
+
+The prototype's single ~930-line engine was split into the module architecture from
 [`docs/technical-handover.md`](docs/technical-handover.md) (§2), plus the two Phase-1 features:
 
 - **`GameState` single source of truth** (`src/core/state.js`) — everything mutable and save-worthy in one object; transient visuals (particles, floats, camera, animation timers) live outside it and are never saved.
@@ -51,6 +59,6 @@ prototype/          the original monolith prototype, archived for reference
 
 ## Next phases
 
-Phase 2 — bigger world + zone tags · Phase 3 — building depth · Phase 4 — farming + economy ·
+Phase 3 — building depth · Phase 4 — farming + economy ·
 Phase 5 — NPCs · Phase 6 — living world events · Phase 7 — Merlin · Phase 8 — venture & combat ·
 Phase 9 — the dragon · Phase 10 — progression trees. See `docs/technical-handover.md` §7.

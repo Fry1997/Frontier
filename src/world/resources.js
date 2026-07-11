@@ -4,15 +4,18 @@
 //   days, tracked in state.world.resourceTimers as { "tx,ty": regrowAtDay }
 //   (schema §3). The stump becomes a sapling one day before regrowAtDay and
 //   a full tree on regrowAtDay.
-// - Sticks and stones ambiently respawn near trees / boulders, capped, so the
-//   world never runs dry.
+// - Sticks and stones ambiently respawn near trees / boulders, capped per map,
+//   so the world never runs dry. Spawns are zone-weighted (§5 Tiles/biomes):
+//   sticks prefer forest-zone trees, stones prefer rock-zone boulders — the
+//   source object type and preferred zone are content data (RESOURCE_SOURCES).
 // Emits 'resource:regrown' and 'resource:spawned' on the bus.
 
 import { okey } from '../core/state.js';
+import { RESOURCE_SOURCES, OBJECT_DEFS } from '../content/objects.js';
 
 const T = 32;
 const REGROW_MIN_DAYS = 2, REGROW_MAX_DAYS = 3;
-const CAPS = { stick: 5, stone: 4 };
+const DEFAULT_CAPS = { stick: 5, stone: 4 };
 const SPAWN_PERIOD = 90;  // seconds (= game minutes) between ambient spawn attempts
 const SPAWN_CHANCE = 0.55;
 
@@ -57,7 +60,7 @@ export function createResources(rt) {
         // Don't close a tree around anyone standing on the tile — retry later.
         const [tx, ty] = key.split(',').map(Number);
         if (occupied(tx, ty)) continue;
-        state.world.objects[key] = { type: 'tree', hp: 3 };
+        state.world.objects[key] = { type: 'tree', hp: OBJECT_DEFS.tree.hp };
         delete timers[key];
         bus.emit('resource:regrown', { key, stage: 'tree', tx, ty });
       }
@@ -71,11 +74,18 @@ export function createResources(rt) {
 
   function trySpawn(kind) {
     const { state, tiles, rng } = rt;
+    const caps = tiles.map.resourceCaps || DEFAULT_CAPS;
     const onGround = state.world.drops.filter(d => d.kind === kind).length;
-    if (onGround >= CAPS[kind]) return;
-    // Spawn beside a matching source: sticks under trees, stones by boulders.
-    const srcType = kind === 'stick' ? 'tree' : 'boulder';
-    const sources = Object.keys(state.world.objects).filter(k => state.world.objects[k].type === srcType);
+    if (onGround >= caps[kind]) return;
+    // Spawn beside a matching source object, preferring its home zone
+    // (sticks under forest trees, stones by rock-zone boulders).
+    const src = RESOURCE_SOURCES[kind];
+    let sources = Object.keys(state.world.objects).filter(k => state.world.objects[k].type === src.objectType);
+    const zoned = sources.filter(k => {
+      const [sx, sy] = k.split(',').map(Number);
+      return tiles.zoneAt(sx, sy) === src.zone;
+    });
+    if (zoned.length && rng.chance(0.75)) sources = zoned;
     if (!sources.length) return;
     for (let tries = 0; tries < 8; tries++) {
       const [sx, sy] = rng.pick(sources).split(',').map(Number);

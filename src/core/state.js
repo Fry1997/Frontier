@@ -16,7 +16,7 @@ export const SAVE_VERSION = 1;
 
 export const DAY_START_MINUTE = 8 * 60; // the first morning begins at 08:00
 
-export function createState({ seed, baseMapId = 'meadow-vale', settings = {} } = {}) {
+export function createState({ seed, baseMapId = 'greenwood', settings = {} } = {}) {
   const map = MAPS[baseMapId];
   const { objects, drops } = initialWorldObjects(map);
   return {

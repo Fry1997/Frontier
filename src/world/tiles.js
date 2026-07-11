@@ -3,7 +3,8 @@
 // state is attached; setTile writes the delta AND the cache so saves stay
 // small and the renderer stays fast.
 
-import { MAPS, baseTerrain } from '../content/maps.js';
+import { MAPS, baseTerrain, zoneAt } from '../content/maps.js';
+import { isPassable } from '../content/objects.js';
 import { okey } from '../core/state.js';
 
 const T = 32;
@@ -22,14 +23,11 @@ export function createTileMap(state) {
   const tileAt = (tx, ty) => (tx < 0 || ty < 0 || tx >= W || ty >= H) ? 'X' : grid[ty][tx];
   const isLand = g => g !== 'w' && g !== 'X';
 
-  // Object types the player can walk over.
-  const PASSABLE = new Set(['stump', 'door', 'sapling']);
-
   function blockedTile(tx, ty) {
     const g = tileAt(tx, ty);
     if (g === 'X' || g === 'w') return true;
     const o = state.world.objects[okey(tx, ty)];
-    if (o && !PASSABLE.has(o.type)) return true;
+    if (o && !isPassable(o.type)) return true; // passability is content data
     return false;
   }
 
@@ -48,5 +46,8 @@ export function createTileMap(state) {
     else state.world.tileDeltas[okey(tx, ty)] = type;
   }
 
-  return { map, W, H, grid, tileAt, isLand, blockedTile, blockedPx, setTile };
+  return {
+    map, W, H, grid, tileAt, isLand, blockedTile, blockedPx, setTile,
+    zoneAt: (tx, ty) => zoneAt(map, tx, ty),
+  };
 }

@@ -28,6 +28,10 @@ globally-installed playwright with
   (pick the NEAREST drop of a kind, drops scatter when popped).
 - Chop: craft axe first (gather stick+stone → press `c` → MAKE), stand on an
   adjacent tile, tap the facing arrow briefly, then `e` ×3 (0.6s apart).
+- Don't hardcode map coordinates — the default map is `greenwood` (44×34,
+  zoned); find the nearest tree/drop via `__frontier.state.world.objects` /
+  `.drops` and `__frontier.tiles.blockedTile`. `tiles.zoneAt(tx,ty)` returns
+  forest/rock/lake/meadow.
 
 ## Gotchas
 

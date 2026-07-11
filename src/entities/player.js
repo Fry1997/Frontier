@@ -5,6 +5,7 @@
 
 import { okey } from '../core/state.js';
 import { ITEMS } from '../content/items.js';
+import { OBJECT_DEFS } from '../content/objects.js';
 import * as inv from '../sim/inventory.js';
 import * as needs from '../sim/needs.js';
 import * as crafting from '../sim/crafting.js';
@@ -48,7 +49,7 @@ export function actionCtx(rt) {
   }
   const [fx, fy] = faceTile(state);
   const o = state.world.objects[okey(fx, fy)];
-  if (o && o.type === 'tree') {
+  if (o && OBJECT_DEFS[o.type]?.choppable) {
     return inv.hasTool(state, 'axe') ? { k: 'chop', label: 'CHOP', o, fx, fy } : { k: 'noaxe', label: 'NEED AXE' };
   }
   if (o && o.type === 'fire' && inv.count(state, 'meatRaw') > 0) return { k: 'cook', label: 'COOK' };
