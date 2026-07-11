@@ -213,6 +213,28 @@
       "constraints": ["dusky plum hooded cloak (current placeholder look)", "reads as a wanderer — road-worn, curious"]
     },
     {
+      "requestId": "REQ-0012",
+      "assetId": "npc.merlin",
+      "status": "requested",
+      "type": "character_sheet",
+      "purpose": "Merlin (Phase 7) — the companion. Second-most-seen character after Arthur; he follows the player all day.",
+      "spec": {
+        "frameSize": { "w": 32, "h": 48 },
+        "states": [
+          { "name": "idle", "frames": 1, "directions": ["down", "up", "left", "right"] },
+          { "name": "walk", "frames": 4, "directions": ["down", "up", "left", "right"] }
+        ],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "merlin.png + merlin.json atlas",
+      "integratesAt": "assets/sprites/npcs/",
+      "priority": "high",
+      "constraints": ["deep-blue robe, wild white hair + beard (current placeholder look)", "warm, knowing — not spooky", "reads clearly beside Arthur at 3x scale"]
+    },
+    {
       "requestId": "REQ-0006",
       "assetId": "prop.wall_segment",
       "status": "requested",

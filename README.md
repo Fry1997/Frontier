@@ -10,7 +10,16 @@ npx serve .        # or: python3 -m http.server
 
 Move with WASD / left-thumb joystick, act with **E** / the action button, craft with **C**.
 
-## Status — Phase 6 complete (Living world)
+## Status — Phase 7 complete (Merlin)
+
+New in Phase 7:
+
+- **Merlin arrives on day 3** — a landmark companion who **follows Arthur by day** (heel position, faster follow gait) and rests at his own spot by night. Talk to him like anyone else; **the bond is the progression** (`src/sim/companion.js`):
+  - *acquaintance* → **LIGHT**: a soft moonish glow around him at night
+  - *friend* → **HASTEN**: Arthur walks ~12% faster while Merlin is near
+- He buffs your actions; he never solos anything (design pillar). His dialogue foreshadows the dragon, the keep, and the raiders (Phases 8–9).
+
+## Phase 6 (Living world)
 
 New in Phase 6:
 

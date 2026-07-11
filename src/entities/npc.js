@@ -12,6 +12,7 @@ import * as rel from '../sim/relationships.js';
 
 const T = 32;
 const SPEED = 58;
+const FOLLOW_SPEED = 96; // companions keep pace
 
 export function createNpcs(rt) {
   // Arrivals: make sure everyone whose day has come exists in state —
@@ -60,7 +61,12 @@ export function createNpcs(rt) {
 
       // pick a target
       const anchor = schedule.placePos(rt, def, entry.place);
-      if (entry.goal === 'wander') {
+      if (entry.goal === 'follow') {
+        // heel position: far enough behind that only facing him starts a
+        // conversation (keeps TALK from shadowing other context actions)
+        m.tx = state.player.x - 34;
+        m.ty = state.player.y + 14;
+      } else if (entry.goal === 'wander') {
         m.pause -= dt;
         if (m.pause <= 0) {
           m.pause = 2 + Math.random() * 4;
@@ -76,9 +82,10 @@ export function createNpcs(rt) {
       // walk toward the target with axis slide
       const dx = m.tx - npc.x, dy = m.ty - npc.y;
       const dist = Math.hypot(dx, dy);
+      const speed = entry.goal === 'follow' ? FOLLOW_SPEED : SPEED;
       m.moving = false;
-      if (dist > 6) {
-        const vx = (dx / dist) * SPEED * dt, vy = (dy / dist) * SPEED * dt;
+      if (dist > (entry.goal === 'follow' ? 20 : 6)) {
+        const vx = (dx / dist) * speed * dt, vy = (dy / dist) * speed * dt;
         let moved = false;
         if (!tiles.blockedPx(npc.x + vx, npc.y)) { npc.x += vx; moved = true; }
         if (!tiles.blockedPx(npc.x, npc.y + vy)) { npc.y += vy; moved = true; }

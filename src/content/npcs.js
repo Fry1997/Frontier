@@ -21,6 +21,19 @@ export const NPC_DEFS = {
     ],
     lines: 'maro',
   },
+  merlin: {
+    id: 'merlin',
+    name: 'MERLIN',
+    kind: 'landmark',
+    look: { tunic: '#4a5a9c', tunicLo: '#39477e', hair: '#e8e4da', hairLo: '#c4beb0', hairHi: '#ffffff', hairstyle: 'wild' },
+    arrivesDay: 3,            // finds you once the camp is real
+    home: { tx: 18, ty: 13 }, // a quiet spot NW of the clearing
+    schedule: [
+      { from: 7 * 60, to: 21 * 60, goal: 'follow', place: 'home' }, // shadows Arthur by day
+      { from: 21 * 60, to: 7 * 60, goal: 'rest', place: 'home' },
+    ],
+    lines: 'merlin',
+  },
   wren: {
     id: 'wren',
     name: 'WREN',

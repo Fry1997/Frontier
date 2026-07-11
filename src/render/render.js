@@ -5,6 +5,7 @@
 import * as timeSys from '../world/time.js';
 import * as crafting from '../sim/crafting.js';
 import * as building from '../sim/building.js';
+import * as companion from '../sim/companion.js';
 import { okey } from '../core/state.js';
 
 const T = 32;
@@ -167,6 +168,20 @@ export function createRenderer(rt) {
       ctx.fillStyle = grd;
       ctx.fillRect(gx - rr, gy - rr, rr * 2, rr * 2);
       if (Math.random() < 0.12) fx.pushPart({ x: gx + (Math.random() - 0.5) * 8, y: gy - 8, vx: (Math.random() - 0.5) * 8, vy: -22, t: 0, life: 0.9, col: p.ember, sz: 1, grav: -6, flut: 1 });
+    }
+
+    // Merlin's light (bond-gated companion aura) — a cool moonish glow
+    if (nightA > 0.05) {
+      const auras = companion.auras(state);
+      const m = companion.merlin(state);
+      if (m && auras.light) {
+        const grd = ctx.createRadialGradient(m.x, m.y - 16, 6, m.x, m.y - 16, 72);
+        grd.addColorStop(0, `rgba(180,200,255,${0.28 * nightA})`);
+        grd.addColorStop(1, 'rgba(180,200,255,0)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(m.x - 72, m.y - 88, 144, 144);
+        if (Math.random() < 0.08) fx.pushPart({ x: m.x + (Math.random() - 0.5) * 20, y: m.y - 30, vx: (Math.random() - 0.5) * 6, vy: -10, t: 0, life: 1.2, col: '#bcd0ff', sz: 1, grav: -4, flut: 1 });
+      }
     }
 
     // cozy room light when inside at night

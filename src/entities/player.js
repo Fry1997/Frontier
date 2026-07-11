@@ -11,6 +11,7 @@ import * as inv from '../sim/inventory.js';
 import * as needs from '../sim/needs.js';
 import * as crafting from '../sim/crafting.js';
 import * as farming from '../sim/farming.js';
+import * as companion from '../sim/companion.js';
 import * as timeSys from '../world/time.js';
 
 const T = 32;
@@ -188,7 +189,7 @@ export function update(rt, dt) {
   let mx = ax, my = ay;
   const m = Math.hypot(mx, my);
   const weak = needs.isWeak(state);
-  const spd = (weak ? 68 : 104) * (sp.cookT > 0 ? 0 : 1) * Math.min(1, m);
+  const spd = (weak ? 68 : 104) * companion.speedMult(state) * (sp.cookT > 0 ? 0 : 1) * Math.min(1, m);
   if (m > 0.15 && sp.actT <= 0) {
     mx /= m; my /= m;
     const nx = p.x + mx * spd * dt, ny = p.y + my * spd * dt;
