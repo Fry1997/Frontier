@@ -57,6 +57,12 @@ export function createUI(wrap) {
   const dialoguePanel = el('div', 'dialogue-panel hidden');
   wrap.appendChild(dialoguePanel);
 
+  const issueBtn = el('button', 'issue-btn hidden');
+  wrap.appendChild(issueBtn);
+
+  const eventPanel = el('div', 'craft-panel event-panel hidden');
+  wrap.appendChild(eventPanel);
+
   const homeBanner = el('div', 'home-banner hidden', `
     <div class="home-title">HOME.</div>
     <div class="home-sub">THE CAMP IS YOURS.<br>PHASE 1 COMPLETE.</div>
@@ -93,6 +99,14 @@ export function createUI(wrap) {
       dialoguePanel.classList.remove('hidden');
     });
     dialoguePanel.addEventListener('pointerdown', () => dialoguePanel.classList.add('hidden'));
+    issueBtn.addEventListener('pointerdown', () => H.onEventOpen());
+    rt.bus.on('event:aftermath', ({ text }) => {
+      dialoguePanel.innerHTML = `
+        <div class="dp-name">AFTERMATH</div>
+        <div class="dp-line">${text}</div>
+        <div class="dp-hint">TAP TO CLOSE</div>`;
+      dialoguePanel.classList.remove('hidden');
+    });
     update();
   }
 
@@ -238,6 +252,30 @@ export function createUI(wrap) {
     }
   }
 
+  // --- event panel: title, body, resolution choices ---
+  function renderEvent() {
+    const { state, session } = rt;
+    const def = rt.events.defFor(session.eventOpen);
+    if (!def || !state.events.active.some(i => i.defId === def.id)) {
+      session.eventOpen = null;
+      eventPanel.classList.add('hidden');
+      return;
+    }
+    const q = rt.events.query();
+    eventPanel.innerHTML = `
+      <div class="cp-head"><span>${def.title}</span><button class="cp-close">X</button></div>
+      <div class="ev-body">${def.body}</div>
+      <div class="ev-choices"></div>`;
+    eventPanel.querySelector('.cp-close').addEventListener('pointerdown', () => H.onEventClose());
+    const host = eventPanel.querySelector('.ev-choices');
+    for (const c of def.choices) {
+      const ok = !c.require || c.require(q);
+      const b = el('button', 'ev-choice' + (ok ? '' : ' dim'), c.label);
+      b.addEventListener('pointerdown', () => { if (ok) H.onEventChoice(def.id, c.id); });
+      host.appendChild(b);
+    }
+  }
+
   // --- reactive update (visibility + craft panel) ---
   function update() {
     if (!rt) return;
@@ -251,6 +289,15 @@ export function createUI(wrap) {
     if (inGame && session.chestOpen) renderChest();
     shopPanel.classList.toggle('hidden', !inGame || !session.shopOpen);
     if (inGame && session.shopOpen) renderShop();
+    const issues = inGame && state ? state.events.active : [];
+    issueBtn.classList.toggle('hidden', !issues.length || !!session.eventOpen);
+    if (issues.length) {
+      const def = rt.events.defFor(issues[0].defId);
+      issueBtn.textContent = '! ' + (def ? def.title : 'SOMETHING STIRS');
+      issueBtn.classList.add('pulse');
+    }
+    eventPanel.classList.toggle('hidden', !inGame || !session.eventOpen);
+    if (inGame && session.eventOpen) renderEvent();
     cancelBtn.classList.toggle('hidden', !session.placing);
     craftBtn.classList.toggle('hidden', !!session.placing);
     if (state) {

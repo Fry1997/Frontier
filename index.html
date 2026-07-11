@@ -112,6 +112,21 @@
   .ch-empty { color: rgba(247,239,219,0.35); font-size: 6px; letter-spacing: 1px; padding: 8px 2px; }
   .ch-hint { color: rgba(247,239,219,0.4); font-size: 6px; letter-spacing: 1px; text-align: center; margin-top: 10px; }
 
+  .issue-btn {
+    position: absolute; left: 50%; top: 110px; transform: translateX(-50%);
+    background: rgba(96,60,30,0.92); border: 3px solid #e8a33d; color: #f7efdb;
+    font-size: 8px; letter-spacing: 1px; padding: 10px 14px; border-radius: 10px;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.4); cursor: pointer; z-index: 5;
+  }
+  .event-panel { width: min(420px, calc(100vw - 20px)); bottom: auto; top: 50%; transform: translate(-50%, -50%); }
+  .ev-body { color: #f7efdb; font-size: 8px; line-height: 1.9; margin-bottom: 12px; }
+  .ev-choices { display: flex; flex-direction: column; gap: 8px; }
+  .ev-choice {
+    background: rgba(232,163,61,0.15); border: 2px solid #e8a33d; color: #f7efdb;
+    font-size: 8px; letter-spacing: 1px; padding: 12px; border-radius: 8px; cursor: pointer; text-align: left;
+  }
+  .ev-choice.dim { opacity: 0.4; border-color: rgba(244,230,200,0.25); }
+
   .dialogue-panel {
     position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%);
     width: min(420px, calc(100vw - 24px)); background: rgba(30,20,28,0.96);

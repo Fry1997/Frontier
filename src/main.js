@@ -21,6 +21,7 @@ import { createQuests } from './sim/quests.js';
 import * as inventory from './sim/inventory.js';
 import * as farming from './sim/farming.js';
 import * as economy from './sim/economy.js';
+import { createEvents } from './sim/events.js';
 import * as saveio from './io/save.js';
 import { createInput } from './io/input.js';
 import { createRenderer } from './render/render.js';
@@ -88,6 +89,7 @@ function freshSession() {
     craftOpen: false,
     chestOpen: null, // containerId while a chest panel is open
     shopOpen: null,  // shopId while a shop panel is open
+    eventOpen: null, // defId while an issue panel is open
     placing: null,
     player: { animT: 0, actT: 0, cookT: 0, moving: false, swingCb: null },
   };
@@ -102,6 +104,7 @@ function attachState(state) {
   rt.tiles = createTileMap(state);
   rt.rabbits = createRabbits(rt);
   rt.npcs = createNpcs(rt);
+  rt.events = createEvents(rt);
   rt.quests = createQuests(rt);
   resources = createResources(rt);
   if (autosave) autosave.detach();
@@ -189,6 +192,24 @@ ui.wire(rt, {
     bus.emit('ui:click', {});
     bus.emit('ui:update', {});
   },
+  onEventOpen() {
+    const first = rt.state.events.active[0];
+    if (!first) return;
+    rt.session.eventOpen = first.defId;
+    bus.emit('ui:click', {});
+    bus.emit('ui:update', {});
+  },
+  onEventChoice(defId, choiceId) {
+    if (rt.events.resolve(defId, choiceId)) {
+      rt.session.eventOpen = null;
+      bus.emit('ui:update', {});
+    }
+  },
+  onEventClose() {
+    rt.session.eventOpen = null;
+    bus.emit('ui:click', {});
+    bus.emit('ui:update', {});
+  },
   onCyclePalette() {
     const ks = Object.keys(PALETTES);
     setPalette(ks[(ks.indexOf(rt.view.palKey) + 1) % ks.length]);
@@ -215,6 +236,7 @@ bus.on('input:cancel', () => {
   if (rt.session.placing) crafting.cancelPlace(rt);
   else if (rt.session.chestOpen) { rt.session.chestOpen = null; bus.emit('ui:update', {}); }
   else if (rt.session.shopOpen) { rt.session.shopOpen = null; bus.emit('ui:update', {}); }
+  else if (rt.session.eventOpen) { rt.session.eventOpen = null; bus.emit('ui:update', {}); }
   else if (rt.session.craftOpen) { rt.session.craftOpen = false; bus.emit('ui:update', {}); }
 });
 bus.on('input:palette', () => {

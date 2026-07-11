@@ -95,5 +95,8 @@ export function attachAudio(bus, sfx) {
   on('npc:talked',       () => sfx.ui());
   on('npc:arrived',      () => sfx.quest());
   on('relationship:tier', () => sfx.craft());
+  // Phase 6: living world
+  on('event:started',    () => sfx.quest());
+  on('event:resolved',   () => sfx.craft());
   return sfx;
 }

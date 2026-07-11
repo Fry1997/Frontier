@@ -10,7 +10,14 @@ npx serve .        # or: python3 -m http.server
 
 Move with WASD / left-thumb joystick, act with **E** / the action button, craft with **C**.
 
-## Status — Phase 5 complete (The people)
+## Status — Phase 6 complete (Living world)
+
+New in Phase 6:
+
+- **Event system** (`src/sim/events.js`) — weighted `EventDef`s (content: `src/content/events.js`) roll once per day rollover against a query facade (day/season/flags/relationships/inventory); at most one new issue a day, with per-event cooldowns. Active instances persist (`state.events.active`), **expire if ignored**, and file into `state.events.history` when resolved.
+- **Resolvable issues** — a pulsing banner announces the issue; the panel offers choices with requirement gating (unaffordable choices are dimmed and inert). Effects run through a facade (coins, items, relationship shifts) and end with an aftermath line. Shipping events: **Maro's stores run low** (give / sell at a premium / ignore), **a quarrel by the cart** (side with either, or mediate if both trust you), and the first landmark encounter — **the cloaked traveller** (fortune *or* trouble; steals a little, never ruins you).
+
+## Phase 5 (The people)
 
 New in Phase 5:
 
