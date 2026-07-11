@@ -20,8 +20,10 @@ order; priority tells you where the value is.*
 | REQ-0011 | `npc.wren` | character_sheet | medium | Wren the traveller (idle/walk, 4 dirs) |
 | REQ-0004 | `prop.table` | prop | low | Table (interior furniture) |
 | REQ-0006 | `prop.wall_segment` | prop | low | Freestanding fence/palisade segment |
+| REQ-0013 | `enemy.wolf` | character_sheet | medium | Wolf — first venture threat (idle/run, L/R) |
 | REQ-0008 | `crops.turnip` | prop | low | Turnip growth stages (3 frames) |
 | REQ-0009 | `crops.pumpkin` | prop | low | Pumpkin growth stages (5 frames) |
+| REQ-0014 | `prop.trail_sign` | prop | low | Trailhead signpost (venture entrance) |
 
 Full machine-readable specs: [`design/requests.json`](requests.json) — that
 file is the ledger; every field the contract requires (frame sizes, states,

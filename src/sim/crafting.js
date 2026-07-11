@@ -41,7 +41,7 @@ export function craftItem(rt, id) {
 
   inv.spend(state, r.costs);
   if (r.out) inv.add(state, r.out.itemId, r.out.qty);
-  if (r.equips) state.player.equipped[r.equips] = ITEMS[r.out.itemId].tool;
+  if (r.equips) state.player.equipped[r.equips] = ITEMS[r.out.itemId][r.equips]; // e.g. tool:'axe', weapon:'sword'
   if (r.effect) bus.emit('craft:effect', { effect: r.effect }); // e.g. building handles 'upgradeShelter'
   session.craftOpen = false;
   bus.emit('craft:crafted', { id: r.id, name: r.name, x: state.player.x, y: state.player.y });

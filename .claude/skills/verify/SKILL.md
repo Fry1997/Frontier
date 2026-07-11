@@ -42,6 +42,15 @@ globally-installed playwright with
   step away before advancing `state.time.day` to test renewal. The regrow
   check runs once a game-minute (= 1 real second); allow ~2.5s for the two
   stage transitions.
-- Working smoke test lives at the session scratchpad `smoke.mjs` pattern:
-  gather → craft → chop → renewal → save/load round-trip → corrupt-save and
-  future-version probes.
+- **The full end-to-end smoke test is committed at `tests/smoke.mjs`** — it
+  drives all shipped phases (gather/craft/chop/renewal, save/load +
+  migrations, building/storage/sleep, farming, trading, NPCs/dialogue,
+  events, Merlin, venture combat) through the real UI. Run it before
+  claiming a change works: `http-server -p 8321 & node tests/smoke.mjs`.
+- The companion (Merlin) follows the player from day 3 — he heels 48px
+  behind the facing, parks exactly at heel, can't be hailed mid-stride,
+  and stops repositioning within 60px. Tests that face a direction after
+  approaching should expect TALK only when deliberately facing a settled
+  NPC; retry loops that wait ~700ms for walkers to settle are the pattern.
+- Placement anchors depend on the player's exact row — use short 40ms key
+  taps (see `alignTo` in the smoke test) to pin position before placing.

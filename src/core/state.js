@@ -12,7 +12,7 @@
 
 import { MAPS, initialWorldObjects } from '../content/maps.js';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export const DAY_START_MINUTE = 8 * 60; // the first morning begins at 08:00
 
@@ -30,6 +30,7 @@ export function createState({ seed, baseMapId = 'greenwood', settings = {} } = {
       x: map.playerStart.x * 32,
       y: map.playerStart.y * 32,
       dir: 'down',
+      hp: 6, // hearts (venture layer); gentle at home, at risk in the wilds
       needs: { hunger: 1, thirst: 1 },
       skills: {},
       equipped: { weapon: null, tool: null },

@@ -10,7 +10,18 @@ npx serve .        # or: python3 -m http.server
 
 Move with WASD / left-thumb joystick, act with **E** / the action button, craft with **C**.
 
-## Status — Phase 7 complete (Merlin)
+## Status — Phase 8 complete (Venture & teeth)
+
+New in Phase 8:
+
+- **The trailhead** — a signpost on Greenwood's western edge. **VENTURE** takes Arthur into **the Darkwood**, a 26×20-tile expedition map that regenerates fresh each trip (`src/world/venture.js`); only what you carry comes home. The settlement sim pauses while you're out (crops still grow on day rollover); autosaves during a trip record your home position — expedition state is never saved.
+- **Combat** (`src/sim/combat.js`) — craft a **stone sword**, face a wolf, **ATTACK**: swing timing reuses the axe arc, hits knock back, three strikes down a wolf, pelts pop as loot (sellable at the cart). Wolves prowl, chase inside their aggro radius, and bite on a cooldown.
+- **Hearts, and the pillar enforced** — Arthur has 6 hearts (shown when hurt or venturing). At **0 hearts you are never killed**: you're *driven back* to the trailhead with 2 hearts and a few coins lighter. Sleeping in your bed mends 2 hearts.
+- **Merlin's ward** — at friend bond he turns aside ~1 in 3 bites ("MERLIN'S WARD"); he buffs, he never solos.
+- **Save v4** — migration adds `player.hp` and the trailhead to older saves.
+- Companion/NPC interaction hardening (found by test probes): NPCs can't be hailed mid-stride, the companion heels 48px behind the player's facing and parks exactly at heel — so TALK never shadows TRADE, HARVEST, or placement verbs.
+
+## Phase 7 (Merlin)
 
 New in Phase 7:
 

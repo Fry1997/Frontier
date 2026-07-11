@@ -58,6 +58,9 @@ export class SFX {
   denied() { this.tone(170, 0.1, 'square', 0.22, -50); }
   ui()     { this.tone(440, 0.05, 'square', 0.12); }
   coin()   { this.tone(988, 0.06, 'square', 0.2); this.tone(1319, 0.12, 'square', 0.2, 0, 0.06); }
+  hurt()   { this.tone(140, 0.14, 'square', 0.3, -60); this.noise(0.08, 0.3, 700); }
+  ward()   { this.tone(880, 0.08, 'sine', 0.22, 220); this.tone(1175, 0.1, 'sine', 0.18, 0, 0.08); }
+  downed() { [330, 262, 196].forEach((f, i) => this.tone(f, 0.2, 'triangle', 0.28, 0, i * 0.16)); }
 }
 
 // Map semantic events to sounds. Returns the SFX instance.
@@ -98,5 +101,13 @@ export function attachAudio(bus, sfx) {
   // Phase 6: living world
   on('event:started',    () => sfx.quest());
   on('event:resolved',   () => sfx.craft());
+  // Phase 8: the wilds
+  on('venture:entered',  () => sfx.quest());
+  on('venture:exited',   () => sfx.ui());
+  on('venture:downed',   () => sfx.downed());
+  on('enemy:hit',        () => sfx.chop());
+  on('enemy:killed',     () => { sfx.poof(); sfx.squeak(); });
+  on('player:hurt',      () => sfx.hurt());
+  on('combat:warded',    () => sfx.ward());
   return sfx;
 }

@@ -25,6 +25,16 @@ export const RECIPES = [
     once: true,
   },
   {
+    id: 'sword',
+    name: 'STONE SWORD',
+    desc: 'FOR THE WILDS',
+    icon: 'sword',
+    out: { itemId: 'sword', qty: 1 },
+    costs: [{ itemId: 'wood', qty: 2 }, { itemId: 'stone', qty: 3 }],
+    once: true,
+    equips: 'weapon',
+  },
+  {
     id: 'fire',
     name: 'CAMPFIRE',
     desc: 'COOK + WARMTH',

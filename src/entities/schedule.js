@@ -20,7 +20,9 @@ export function placePos(rt, def, place) {
     const key = Object.keys(rt.state.world.objects).find(k => rt.state.world.objects[k].type === 'stall');
     if (key) {
       const [tx, ty] = key.split(',').map(Number);
-      return { x: tx * T + 16, y: (ty + 1) * T + 16 }; // stand in front of the cart
+      // beside the counter, not in front of it — customers face the cart
+      // to TRADE and face him to TALK, without the two overlapping
+      return { x: (tx + 1) * T + 16, y: (ty + 1) * T + 8 };
     }
   }
   const home = NPC_DEFS[def.id].home;

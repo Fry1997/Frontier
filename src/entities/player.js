@@ -12,6 +12,7 @@ import * as needs from '../sim/needs.js';
 import * as crafting from '../sim/crafting.js';
 import * as farming from '../sim/farming.js';
 import * as companion from '../sim/companion.js';
+import * as combat from '../sim/combat.js';
 import * as timeSys from '../world/time.js';
 
 const T = 32;
@@ -36,10 +37,11 @@ function findFood(state) {
   return null;
 }
 
-export function nearFire(state) {
+export function nearFire(rt) {
+  const state = rt.state;
   const tx = Math.floor(state.player.x / T), ty = Math.floor(state.player.y / T);
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-    const o = state.world.objects[okey(tx + dx, ty + dy)];
+    const o = rt.world().objects[okey(tx + dx, ty + dy)];
     if (o && o.type === 'fire' && o.lit) return true;
   }
   return false;
@@ -54,44 +56,59 @@ export function actionCtx(rt) {
   }
   if (sp.cookT > 0) return { k: 'none', label: '...' };
   {
-    // people before prey: a neighbour in reach is a conversation
     const [px, py] = facePoint(state);
-    const npc = rt.npcs?.talkTarget(px, py);
-    if (npc) return { k: 'talk', label: 'TALK', npc };
-    if (inv.hasTool(state, 'axe')) {
-      for (const r of rt.rabbits.list) {
-        if (r.alive && Math.hypot(r.x - px, r.y - py) < 26) return { k: 'hunt', label: 'HUNT', r };
+    if (session.venturing) {
+      // out in the wilds: steel first
+      const e = combat.attackTarget(rt, px, py);
+      if (e) {
+        return state.player.equipped.weapon
+          ? { k: 'attack', label: 'ATTACK', e }
+          : { k: 'noweapon', label: 'NO WEAPON' };
+      }
+    } else {
+      // people before prey: a neighbour in reach is a conversation
+      const npc = rt.npcs?.talkTarget(px, py);
+      if (npc) return { k: 'talk', label: 'TALK', npc };
+      if (inv.hasTool(state, 'axe')) {
+        for (const r of rt.rabbits.list) {
+          if (r.alive && Math.hypot(r.x - px, r.y - py) < 26) return { k: 'hunt', label: 'HUNT', r };
+        }
       }
     }
   }
   const [fx, fy] = faceTile(state);
-  const o = state.world.objects[okey(fx, fy)];
+  const o = rt.world().objects[okey(fx, fy)];
+  if (o && o.type === 'trail') {
+    return session.venturing ? { k: 'venture', label: 'RETURN' } : { k: 'venture', label: 'VENTURE' };
+  }
   if (o && OBJECT_DEFS[o.type]?.choppable) {
     return inv.hasTool(state, 'axe') ? { k: 'chop', label: 'CHOP', o, fx, fy } : { k: 'noaxe', label: 'NEED AXE' };
   }
   if (o && o.type === 'fire' && inv.count(state, 'meatRaw') > 0) return { k: 'cook', label: 'COOK' };
-  if (o && o.type === 'chest') return { k: 'chest', label: 'OPEN', containerId: o.containerId };
-  if (o && o.type === 'bed') return { k: 'sleep', label: 'SLEEP' };
-  if (o && OBJECT_DEFS[o.type]?.shopId) {
-    const shopId = OBJECT_DEFS[o.type].shopId;
-    const owner = SHOPS[shopId]?.npcId;
-    if (owner && !rt.npcs?.onDuty(owner, 'tend')) return { k: 'noshop', label: 'CLOSED' };
-    return { k: 'shop', label: 'TRADE', shopId };
-  }
-  // farming verbs on the faced tile
-  const plot = farming.plotAt(state, fx, fy);
-  if (plot) {
-    if (!plot.healthy) return { k: 'farmClear', label: 'CLEAR', plot };
-    if (farming.isGrown(plot)) return { k: 'farmHarvest', label: 'HARVEST', plot };
-    if (!plot.cropId && farming.seedInPack(state)) return { k: 'farmPlant', label: 'PLANT', plot };
-    if (plot.cropId && !plot.watered) return { k: 'farmWater', label: 'WATER', plot };
-  } else if (inv.has(state, 'hoe') && farming.canTill(rt, fx, fy)) {
-    return { k: 'farmTill', label: 'TILL', fx, fy };
+  if (!session.venturing) {
+    if (o && o.type === 'chest') return { k: 'chest', label: 'OPEN', containerId: o.containerId };
+    if (o && o.type === 'bed') return { k: 'sleep', label: 'SLEEP' };
+    if (o && OBJECT_DEFS[o.type]?.shopId) {
+      const shopId = OBJECT_DEFS[o.type].shopId;
+      const owner = SHOPS[shopId]?.npcId;
+      if (owner && !rt.npcs?.onDuty(owner, 'tend')) return { k: 'noshop', label: 'CLOSED' };
+      return { k: 'shop', label: 'TRADE', shopId };
+    }
+    // farming verbs on the faced tile
+    const plot = farming.plotAt(state, fx, fy);
+    if (plot) {
+      if (!plot.healthy) return { k: 'farmClear', label: 'CLEAR', plot };
+      if (farming.isGrown(plot)) return { k: 'farmHarvest', label: 'HARVEST', plot };
+      if (!plot.cropId && farming.seedInPack(state)) return { k: 'farmPlant', label: 'PLANT', plot };
+      if (plot.cropId && !plot.watered) return { k: 'farmWater', label: 'WATER', plot };
+    } else if (inv.has(state, 'hoe') && farming.canTill(rt, fx, fy)) {
+      return { k: 'farmTill', label: 'TILL', fx, fy };
+    }
   }
   if (rt.tiles.tileAt(fx, fy) === 'w' && state.player.needs.thirst < 0.98) return { k: 'drink', label: 'DRINK', fx, fy };
   const food = findFood(state);
   if (food && state.player.needs.hunger < 0.98 && state.flags.metersOn) return { k: 'eat', label: 'EAT', food };
-  if (inv.count(state, 'meatRaw') > 0 && nearFire(state)) return { k: 'cook', label: 'COOK' };
+  if (inv.count(state, 'meatRaw') > 0 && nearFire(rt)) return { k: 'cook', label: 'COOK' };
   return { k: 'none', label: '...' };
 }
 
@@ -106,6 +123,17 @@ export function doAction(rt) {
     return;
   }
   if (c.k === 'talk') { rt.npcs.talk(c.npc); return; }
+  if (c.k === 'attack') { swing(session, () => combat.strike(rt, c.e)); return; }
+  if (c.k === 'noweapon') {
+    bus.emit('action:denied', {});
+    bus.emit('fx:float', { str: 'NEED A SWORD!', x: state.player.x, y: state.player.y - 56, kind: 'bad' });
+    return;
+  }
+  if (c.k === 'venture') {
+    if (session.venturing) rt.ventureApi.exit({});
+    else rt.ventureApi.enter();
+    return;
+  }
   if (c.k === 'noshop') {
     bus.emit('action:denied', {});
     bus.emit('fx:float', { str: 'CLOSED FOR THE NIGHT', x: state.player.x, y: state.player.y - 56, kind: 'text' });
@@ -165,16 +193,16 @@ function swing(session, cb) {
 }
 
 function hitTree(rt, o, fx, fy) {
-  const { state, bus, rng } = rt;
+  const { bus, rng } = rt;
   o.hp--;
   o.shake = 0.25;
   bus.emit('tree:hit', { tx: fx, ty: fy });
   if (o.hp <= 0) {
-    state.world.objects[okey(fx, fy)] = { type: 'stump' };
+    rt.world().objects[okey(fx, fy)] = { type: 'stump' };
     bus.emit('tree:felled', { tx: fx, ty: fy });
     const n = 2 + (rng.chance(0.5) ? 1 : 0);
     for (let i = 0; i < n; i++) {
-      state.world.drops.push({ kind: 'wood', x: fx * T + 16, y: fy * T + 12, pop: true });
+      rt.world().drops.push({ kind: 'wood', x: fx * T + 16, y: fy * T + 12, pop: true });
     }
   }
 }
@@ -219,7 +247,7 @@ export function update(rt, dt) {
   }
 
   // drops: physics + pickup
-  const drops = state.world.drops;
+  const drops = rt.world().drops;
   for (let i = drops.length - 1; i >= 0; i--) {
     const d = drops[i];
     if (d.pop) { d.vx = (Math.random() - 0.5) * 60; d.vy = -60 - Math.random() * 40; d.z = 14; delete d.pop; }
@@ -239,8 +267,8 @@ export function update(rt, dt) {
   }
 
   // object shake decay (visual field on world objects; stripped from saves)
-  for (const key of Object.keys(state.world.objects)) {
-    const o = state.world.objects[key];
-    if (o.shake > 0) o.shake -= dt;
+  const wobjs = rt.world().objects;
+  for (const key of Object.keys(wobjs)) {
+    if (wobjs[key].shake > 0) wobjs[key].shake -= dt;
   }
 }

@@ -13,6 +13,6 @@ export const SHOPS = {
       { itemId: 'pumpkinSeed', price: 5 },
       { itemId: 'meatCk', price: 8 },
     ],
-    buysTags: ['crop', 'food', 'wood', 'mineral'], // raw materials + produce (matches item tag vocabulary)
+    buysTags: ['crop', 'food', 'wood', 'mineral', 'pelt'], // raw materials, produce, and whatever the wilds yield
   },
 };

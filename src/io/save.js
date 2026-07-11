@@ -44,6 +44,17 @@ const migrations = {
     save.version = 3;
     return save;
   },
+  // v3 → v4 (Phase 8): player hearts + the western trailhead set-piece.
+  3: save => {
+    save.player.hp ??= 6;
+    if (save.world.baseMapId === 'greenwood' &&
+        !Object.values(save.world.objects).some(o => o.type === 'trail') &&
+        !save.world.objects['1,13']) {
+      save.world.objects['1,13'] = { type: 'trail' };
+    }
+    save.version = 4;
+    return save;
+  },
 };
 
 export function migrate(save) {
@@ -113,7 +124,18 @@ export function saveSettings(settings) {
 // Wire autosave triggers. Returns an update(dt) for the periodic tick.
 export function attach(rt) {
   const { bus } = rt;
-  const doSave = () => { if (rt.session.phase === 'game') save(rt.state); };
+  const doSave = () => {
+    if (rt.session.phase !== 'game') return;
+    if (rt.venture) {
+      // mid-expedition: expedition state is transient; record home position
+      const out = serialize(rt.state);
+      out.player.x = Math.round(rt.venture.homePos.x);
+      out.player.y = Math.round(rt.venture.homePos.y);
+      try { localStorage.setItem(SAVE_KEY, JSON.stringify(out)); } catch (e) {}
+      return;
+    }
+    save(rt.state);
+  };
 
   bus.on('craft:crafted', doSave);
   bus.on('object:placed', doSave);

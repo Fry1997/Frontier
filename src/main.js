@@ -22,6 +22,8 @@ import * as inventory from './sim/inventory.js';
 import * as farming from './sim/farming.js';
 import * as economy from './sim/economy.js';
 import { createEvents } from './sim/events.js';
+import * as combat from './sim/combat.js';
+import { createVenture } from './world/venture.js';
 import * as saveio from './io/save.js';
 import { createInput } from './io/input.js';
 import { createRenderer } from './render/render.js';
@@ -78,8 +80,12 @@ refreshVillagers();
 rt.input = createInput({ bus, els: ui.els, isActive: () => rt.session?.phase === 'game' });
 rt.fx = createFx(rt);
 rt.hud = createHud(rt);
+rt.venture = null; // active expedition (transient, never saved)
+rt.world = () => rt.venture ? rt.venture.world : rt.state.world; // the active world
+rt.ventureApi = createVenture(rt);
 building.attach(rt); // bus-wired effects (e.g. the tier upgrade)
 farming.attach(rt);  // crop growth on day rollover
+combat.attach(rt);   // sleep heals
 const renderer = createRenderer(rt);
 
 function freshSession() {
@@ -90,6 +96,7 @@ function freshSession() {
     chestOpen: null, // containerId while a chest panel is open
     shopOpen: null,  // shopId while a shop panel is open
     eventOpen: null, // defId while an issue panel is open
+    venturing: false,
     placing: null,
     player: { animT: 0, actT: 0, cookT: 0, moving: false, swingCb: null },
   };
@@ -99,6 +106,7 @@ rt.session = freshSession();
 let resources = null, autosave = null;
 
 function attachState(state) {
+  rt.venture = null; // any expedition dies with its session
   rt.state = state;
   rt.rng = createRng(state.seed ^ (state.time.day * 2654435761));
   rt.tiles = createTileMap(state);
@@ -167,6 +175,11 @@ ui.wire(rt, {
   onCraftToggle() {
     sfx.ensure();
     if (rt.session.placing) { crafting.cancelPlace(rt); return; }
+    if (rt.session.venturing) {
+      bus.emit('action:denied', {});
+      bus.emit('fx:float', { str: 'NOT OUT HERE', x: rt.state.player.x, y: rt.state.player.y - 56, kind: 'text' });
+      return;
+    }
     rt.session.craftOpen = !rt.session.craftOpen;
     bus.emit('ui:click', {});
     bus.emit('ui:update', {});
@@ -229,6 +242,7 @@ ui.wire(rt, {
 bus.on('input:action', () => { sfx.ensure(); playerSys.doAction(rt); });
 bus.on('input:craftToggle', () => {
   if (rt.session.placing) { crafting.cancelPlace(rt); return; }
+  if (rt.session.venturing) { bus.emit('action:denied', {}); return; }
   rt.session.craftOpen = !rt.session.craftOpen;
   bus.emit('ui:update', {});
 });
@@ -255,13 +269,17 @@ const loop = createLoop({
     rt.session.gt += dt;
     if (rt.session.phase !== 'game' || !rt.state) return;
     timeSys.update(rt.state, dt, bus);   // time
-    resources.update(dt);                // world / resource renewal
     playerSys.update(rt, dt);            // player (+ drops pickup)
-    rt.npcs.update(dt);                  // people: schedules → activity → movement
-    rt.rabbits.update(dt);               // critters
-    building.update(rt, dt);             // sim: construction sites, home flag
-    needs.update(rt.state, dt);          // sim: needs decay
-    rt.quests.update(dt);                // sim: quest chain
+    if (rt.session.venturing) {
+      combat.update(rt, dt);             // the wilds: enemies
+    } else {
+      resources.update(dt);              // world / resource renewal
+      rt.npcs.update(dt);                // people: schedules → activity → movement
+      rt.rabbits.update(dt);             // critters
+      building.update(rt, dt);           // sim: construction sites, home flag
+      rt.quests.update(dt);              // sim: quest chain
+    }
+    needs.update(rt.state, dt);          // sim: needs decay (everywhere)
     autosave.update(dt);                 // io: periodic save
     rt.fx.update(dt);                    // transient visuals
     rt.hud.update(dt);

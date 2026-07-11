@@ -545,6 +545,58 @@ function pStall(p) {
   return outline(c, p.outline);
 }
 
+/* ---------- venture (Phase 8) ---------- */
+function pWolf(p, f) {
+  const c = mk(28, 20, ({ R, P }) => {
+    const rnd = rng(30 + f);
+    const legUp = f === 1 ? 1 : 0;
+    // body
+    blob(R, rnd, 12, 10, 9, 5, p.rockLo);
+    R(6, 6, 12, 4, p.rock);
+    // head (facing right)
+    R(18, 5, 7, 6, p.rockLo);
+    R(23, 7, 4, 3, p.rock);            // snout
+    P(26, 8, p.outline);               // nose
+    P(21, 6, p.ember);                 // eye
+    R(18, 3, 2, 3, p.rockLo); R(22, 3, 2, 3, p.rockLo); // ears
+    P(18, 4, p.earPink ?? p.rock);
+    // legs
+    R(7, 14 + legUp, 2, 5 - legUp, p.rockLo);
+    R(11, 14 - legUp, 2, 5 + legUp, p.rockLo);
+    R(15, 14 + legUp, 2, 5 - legUp, p.rockLo);
+    R(18, 14 - legUp, 2, 5 + legUp, p.rockLo);
+    // tail
+    R(3, 6, 4, 3, p.rockLo); P(2, 5, p.rock);
+    speck(P, rnd, 6, 6, 14, 6, p.rockHi, 6);
+  });
+  return outline(c, p.outline);
+}
+function pFur(p) {
+  const c = mk(16, 12, ({ R, P }) => {
+    blob(R, rng(31), 8, 6, 6, 4, p.fur);
+    dith(P, 4, 6, 8, 4, p.furLo);
+    P(4, 3, p.furHi); P(9, 3, p.furHi); P(12, 7, p.furLo);
+  });
+  return outline(c, p.outline);
+}
+function pTrail(p) {
+  const c = mk(30, 40, ({ R, P }) => {
+    const rnd = rng(44);
+    // signpost
+    R(13, 8, 4, 28, p.trunk);
+    R(13, 34, 4, 2, p.trunkLo);
+    R(6, 10, 18, 7, p.woodLog);
+    R(6, 10, 18, 2, p.woodRing);
+    P(22, 13, p.trunkLo); P(8, 14, p.trunkLo);
+    // arrow cut
+    R(24, 11, 3, 5, p.woodLog); P(26, 13, p.woodRing);
+    // worn path pebbles at the base
+    for (const [x, y] of [[4, 36], [10, 38], [18, 37], [24, 38]]) { P(x, y, p.rockLo); P(x + 1, y, p.rockHi); }
+    speck(P, rnd, 7, 11, 16, 5, p.trunkLo, 5);
+  });
+  return outline(c, p.outline);
+}
+
 /* ---------- Arthur ---------- */
 function headFront(R, P, p, hy, hair) {
   // base face
@@ -791,6 +843,9 @@ function icon(p, kind) {
     if (kind === 'pumpkin') { R(4, 7, 8, 6, p.fire2); R(3, 8, 10, 4, p.fire2); R(7, 4, 2, 3, p.trunkLo); P(5, 8, p.fire3); P(5, 9, p.fire3); P(10, 6, p.canopy); }
     if (kind === 'turnipSeed') { P(5, 6, '#efe6da'); P(8, 5, '#efe6da'); P(11, 7, '#efe6da'); P(6, 9, '#e3d6c2'); P(9, 10, '#e3d6c2'); R(4, 12, 8, 1, p.dirtLo); }
     if (kind === 'pumpkinSeed') { P(5, 6, p.fire3); P(8, 5, p.fire3); P(11, 7, p.fire3); P(6, 9, p.ember); P(9, 10, p.ember); R(4, 12, 8, 1, p.dirtLo); }
+    if (kind === 'sword') { for (let i = 0; i < 7; i++) P(4 + i, 11 - i, p.stoneIHi); for (let i = 0; i < 7; i++) P(5 + i, 11 - i, p.stoneI); R(3, 10, 3, 3, p.trunk); P(2, 13, p.trunkLo); R(5, 8, 1, 5, p.trunkLo); }
+    if (kind === 'fur') { blob(R, rng(3), 8, 8, 5, 4, p.fur); dith(P, 5, 8, 7, 3, p.furLo); P(5, 4, p.furHi); P(10, 5, p.furHi); P(12, 9, p.furLo); }
+    if (kind === 'heart') { R(4, 5, 3, 3, p.meatRaw); R(9, 5, 3, 3, p.meatRaw); R(3, 7, 10, 3, p.meatRaw); R(5, 10, 6, 2, p.meatRaw); R(7, 12, 2, 1, p.meatRawLo); P(5, 6, '#ffffff'); R(4, 10, 8, 1, p.meatRawLo); }
     if (kind === 'sun') {
       R(6, 6, 5, 5, p.fire3); R(7, 5, 3, 1, p.fire3); R(7, 11, 3, 1, p.fire3);
       P(5, 6, p.fire3); P(11, 6, p.fire3); P(5, 10, p.fire3); P(11, 10, p.fire3);
@@ -829,7 +884,7 @@ export function buildSprites(p, hair = 'scruff') {
   };
   rab.sitL = rab.sit.map(mirror); rab.hopL = rab.hop.map(mirror);
   const icons = {};
-  for (const k of ['stick', 'stone', 'wood', 'axe', 'meatRaw', 'meatCk', 'hunger', 'thirst', 'hammer', 'fire', 'home', 'sun', 'moon', 'chest', 'wall', 'bed', 'table', 'hoe', 'coin', 'turnip', 'pumpkin', 'turnipSeed', 'pumpkinSeed']) icons[k] = icon(p, k);
+  for (const k of ['stick', 'stone', 'wood', 'axe', 'meatRaw', 'meatCk', 'hunger', 'thirst', 'hammer', 'fire', 'home', 'sun', 'moon', 'chest', 'wall', 'bed', 'table', 'hoe', 'coin', 'turnip', 'pumpkin', 'turnipSeed', 'pumpkinSeed', 'sword', 'fur', 'heart']) icons[k] = icon(p, k);
   return {
     tiles: {
       grass: [tGrass(p, 1), tGrass(p, 2), tGrass(p, 5)],
@@ -847,7 +902,13 @@ export function buildSprites(p, hair = 'scruff') {
       stall: pStall(p),
       soil: pSoil(p, false), soilWet: pSoil(p, true),
       cropWithered: pCropWithered(p),
+      trail: pTrail(p),
+      fur: pFur(p),
     },
+    wolf: (() => {
+      const r = [pWolf(p, 0), pWolf(p, 1)];
+      return { r, l: r.map(mirror) };
+    })(),
     crops: {
       turnip: [0, 1, 2].map(s => pCropStage(p, 'turnip', s, 3)),
       pumpkin: [0, 1, 2, 3, 4].map(s => pCropStage(p, 'pumpkin', s, 5)),

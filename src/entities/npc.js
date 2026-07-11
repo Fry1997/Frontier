@@ -62,10 +62,17 @@ export function createNpcs(rt) {
       // pick a target
       const anchor = schedule.placePos(rt, def, entry.place);
       if (entry.goal === 'follow') {
-        // heel position: far enough behind that only facing him starts a
-        // conversation (keeps TALK from shadowing other context actions)
-        m.tx = state.player.x - 34;
-        m.ty = state.player.y + 14;
+        // heel BEHIND the player's facing. Reposition only while the player
+        // moves AND has pulled away — so facing forward never points at the
+        // companion (no TALK shadowing), and walking up to him doesn't send
+        // him circling away: close in, and he stands to be spoken to.
+        const pd = Math.hypot(npc.x - state.player.x, npc.y - state.player.y);
+        if (rt.session.player.moving && pd > 60) {
+          const DIRV = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };
+          const [fdx, fdy] = DIRV[state.player.dir];
+          m.tx = state.player.x - fdx * 48 - fdy * 8;
+          m.ty = state.player.y - fdy * 48 + fdx * 8;
+        }
       } else if (entry.goal === 'wander') {
         m.pause -= dt;
         if (m.pause <= 0) {
@@ -84,7 +91,9 @@ export function createNpcs(rt) {
       const dist = Math.hypot(dx, dy);
       const speed = entry.goal === 'follow' ? FOLLOW_SPEED : SPEED;
       m.moving = false;
-      if (dist > (entry.goal === 'follow' ? 20 : 6)) {
+      // followers park exactly at heel — a loose stop radius lets them
+      // drift into talk range and shadow other context actions
+      if (dist > (entry.goal === 'follow' ? 8 : 6)) {
         const vx = (dx / dist) * speed * dt, vy = (dy / dist) * speed * dt;
         let moved = false;
         if (!tiles.blockedPx(npc.x + vx, npc.y)) { npc.x += vx; moved = true; }
@@ -100,10 +109,14 @@ export function createNpcs(rt) {
   }
 
   // The NPC (if any) close enough to the player's facing point to talk to.
+  // Two guards keep TALK from shadowing other context actions: the radius
+  // is tight (22px, vs. the 48px companion heel), and an NPC mid-stride
+  // can't be hailed — only someone standing still invites conversation.
   function talkTarget(px, py) {
     for (const npc of rt.state.npcs) {
       if (isAway(npc)) continue;
-      if (Math.hypot(npc.x - px, npc.y - py) < 30) return npc;
+      if (mv[npc.id]?.moving) continue;
+      if (Math.hypot(npc.x - px, npc.y - py) < 22) return npc;
     }
     return null;
   }

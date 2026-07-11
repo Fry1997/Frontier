@@ -67,8 +67,50 @@ export const MAPS = {
       { name: 'lake', rect: [1, 21, 14, 12] },
     ],
     resourceCaps: { stick: 8, stone: 6 },
-    // fixed set-pieces beyond the row chars (the trader's cart, Phase 4)
-    places: [{ type: 'stall', tx: 29, ty: 15 }],
+    // fixed set-pieces beyond the row chars (the trader's cart, Phase 4;
+    // the western trailhead into the wilds, Phase 8)
+    places: [
+      { type: 'stall', tx: 29, ty: 15 },
+      { type: 'trail', tx: 1, ty: 13 },
+    ],
+  },
+
+  // Phase 8: the expedition map behind the trailhead. Regenerated fresh
+  // each trip (enemies/loot are transient); only what you carry comes home.
+  'darkwood': {
+    id: 'darkwood',
+    name: 'THE DARKWOOD',
+    kind: 'venture',
+    w: 26,
+    h: 20,
+    rows: [
+      'TTTTTTTTTTTTTTTTTTTTTTTTTT',
+      'T....TTT.....TTT......TTTT',
+      'T.TT......TT.......TT....T',
+      'T..T..TT......TTT.......TT',
+      'TT....TT..........TT..s..T',
+      'TT.TT........TTT.........T',
+      'T.....TTT........o.TT.TT.T',
+      'T..TT.......TT...........T',
+      'T......TT......TTT...TT..T',
+      'TT......s...TT..........TT',
+      'T.........TT......TT.....T',
+      'T...TTT.........TTT...o..T',
+      'TT.......TT..........TT..T',
+      'T....TT......TTT.........T',
+      'T..TT.....TT........TT..TT',
+      'T....s...TTT....TT.......T',
+      'TT..TT..........TTT...TT.T',
+      'T.......TTT..........TT..T',
+      'T...TT.......TT......s...T',
+      'TTTTTTTTTTTTTTTTTTTTTTTTTT',
+    ],
+    playerStart: { x: 2.5, y: 10.5 }, // just inside the trail
+    rabbitSpawns: [],
+    rabbitCount: 0,
+    zones: [],
+    places: [{ type: 'trail', tx: 1, ty: 10 }],
+    enemySpawns: [[20, 4], [8, 15], [12, 8], [20, 16], [12, 3]],
   },
 
   // The original prototype map — kept so old saves keep working (§4:

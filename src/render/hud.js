@@ -49,6 +49,16 @@ export function createHud(rt) {
     }
     let hudY = cyy + 30;
 
+    // hearts (venture layer) — shown when hurt or out in the wilds
+    if (state.player.hp < 6 || rt.session.venturing) {
+      for (let i = 0; i < 6; i++) {
+        ctx.globalAlpha = i < state.player.hp ? 1 : 0.22;
+        ctx.drawImage(sp.icons.heart, 5 + i * 15, hudY - 4);
+      }
+      ctx.globalAlpha = 1;
+      hudY += 18;
+    }
+
     // quest banner
     const quests = rt.quests;
     if (state.settings.hints && state.quest.stage <= quests.lastStage) {

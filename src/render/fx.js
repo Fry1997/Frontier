@@ -111,6 +111,21 @@ export function createFx(rt) {
     burst(tx * T + 16, ty * T + 6, [pal().smoke], 6, { up: 15, grav: -5, flut: 1, life: 1 });
   });
   bus.on('shop:sold', () => float('+COIN', rt.state.player.x, rt.state.player.y - 56, pal().buckle));
+  bus.on('enemy:hit', ({ x, y }) => burst(x, y - 6, [pal().ui.bad, pal().rockLo], 6, { up: 25, life: 0.5 }));
+  bus.on('enemy:killed', ({ x, y }) => {
+    const p = pal();
+    burst(x, y - 6, [p.smoke, p.rockLo, p.rockHi], 12, { up: 35, life: 0.8 });
+  });
+  bus.on('player:hurt', ({ x, y }) => float('OW!', x, y - 56, pal().ui.bad));
+  bus.on('combat:warded', ({ x, y }) => {
+    float("MERLIN'S WARD", x, y - 60, '#bcd0ff');
+    burst(x, y - 24, ['#bcd0ff', '#e8ecff'], 8, { up: 20, grav: -10, sz: 1, life: 0.6 });
+  });
+  bus.on('venture:downed', ({ lost }) => {
+    const p = rt.state.player;
+    float('DRIVEN BACK...', p.x, p.y - 64, pal().ui.bad);
+    if (lost > 0) float(`-${lost} COIN`, p.x, p.y - 48, pal().ui.bad);
+  });
   bus.on('quest:finale', () => {
     finaleT = 9;
     const p = rt.state.player;
@@ -126,8 +141,9 @@ export function createFx(rt) {
     const sp = rt.session.player;
 
     // ambient: campfire smoke
-    for (const key of Object.keys(state.world.objects)) {
-      const o = state.world.objects[key];
+    const world = rt.world();
+    for (const key of Object.keys(world.objects)) {
+      const o = world.objects[key];
       if (o.type === 'fire' && o.lit && Math.random() < dt * 1.6) {
         const [otx, oty] = key.split(',').map(Number);
         parts.push({ x: otx * T + 14 + Math.random() * 5, y: oty * T + 4, vx: (Math.random() - 0.5) * 6, vy: -14, t: 0, life: 1.5, col: p.smoke, sz: 2, grav: -4, flut: 1 });
@@ -141,7 +157,7 @@ export function createFx(rt) {
     }
 
     // shelters: roof fade + chimney smoke
-    for (const sh of state.structures) {
+    for (const sh of rt.session.venturing ? [] : state.structures) {
       const fx = (roofFx[sh.id] ||= { roofA: 1, smk: 2 });
       const target = building.nearRoof(state, sh) ? 0.06 : 1;
       fx.roofA += (target - fx.roofA) * Math.min(1, dt * 7);

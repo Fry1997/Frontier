@@ -76,9 +76,11 @@ export function createRenderer(rt) {
     }
 
     // farm plots: tilled soil overlays (crops draw as y-sorted entities)
-    for (const plot of state.farm) {
-      if (plot.tx < x0 || plot.tx > x1 || plot.ty < y0 || plot.ty > y1) continue;
-      ctx.drawImage(plot.watered ? sp.props.soilWet : sp.props.soil, plot.tx * T, plot.ty * T);
+    if (!session.venturing) {
+      for (const plot of state.farm) {
+        if (plot.tx < x0 || plot.tx > x1 || plot.ty < y0 || plot.ty > y1) continue;
+        ctx.drawImage(plot.watered ? sp.props.soilWet : sp.props.soil, plot.tx * T, plot.ty * T);
+      }
     }
 
     // placement highlight
@@ -102,23 +104,30 @@ export function createRenderer(rt) {
     }
 
     // entities sorted by feet y
+    const world = rt.world();
     const ents = [];
-    for (const key of Object.keys(state.world.objects)) {
-      const o = state.world.objects[key];
+    for (const key of Object.keys(world.objects)) {
+      const o = world.objects[key];
       const [tx, ty] = key.split(',').map(Number);
       if (tx < x0 - 1 || tx > x1 + 1 || ty < y0 - 2 || ty > y1 + 1) continue;
       ents.push({ y: ty * T + T - (o.type === 'stump' ? 8 : 0), draw: () => drawObj(o, tx, ty, ff) });
     }
-    for (const plot of state.farm) {
-      if (!plot.cropId && plot.healthy) continue;
-      ents.push({ y: plot.ty * T + T - 6, draw: () => drawCrop(plot) });
+    if (!session.venturing) {
+      for (const plot of state.farm) {
+        if (!plot.cropId && plot.healthy) continue;
+        ents.push({ y: plot.ty * T + T - 6, draw: () => drawCrop(plot) });
+      }
+      for (const r of rt.rabbits.list) if (r.alive) ents.push({ y: r.y + 8, draw: () => drawRabbit(r, gt) });
+      for (const npc of state.npcs) {
+        if (npc.activity === 'away') continue;
+        ents.push({ y: npc.y, draw: () => drawNpc(npc) });
+      }
+    } else if (rt.venture) {
+      for (const e of rt.venture.enemies) {
+        if (e.alive) ents.push({ y: e.y + 8, draw: () => drawWolf(e) });
+      }
     }
-    for (const d of state.world.drops) ents.push({ y: d.y, draw: () => drawDrop(d, gt) });
-    for (const r of rt.rabbits.list) if (r.alive) ents.push({ y: r.y + 8, draw: () => drawRabbit(r, gt) });
-    for (const npc of state.npcs) {
-      if (npc.activity === 'away') continue;
-      ents.push({ y: npc.y, draw: () => drawNpc(npc) });
-    }
+    for (const d of world.drops) ents.push({ y: d.y, draw: () => drawDrop(d, gt) });
     ents.push({ y: player.y, draw: drawPlayer });
     if (session.placing) {
       const [ax, ay] = crafting.placeAnchor(rt);
@@ -132,7 +141,7 @@ export function createRenderer(rt) {
     for (const e of ents) e.draw();
 
     // roofs (fade when inside)
-    for (const sh of state.structures) {
+    for (const sh of session.venturing ? [] : state.structures) {
       const rf = fx.roofFx[sh.id];
       const a = rf ? rf.roofA : 1;
       if (a < 0.02) continue;
@@ -155,8 +164,8 @@ export function createRenderer(rt) {
     if (nightA > 0.01) { ctx.fillStyle = `rgba(26,22,64,${0.48 * nightA})`; ctx.fillRect(cx, cy, VW, VH); }
 
     // fire glow
-    for (const key of Object.keys(state.world.objects)) {
-      const o = state.world.objects[key];
+    for (const key of Object.keys(world.objects)) {
+      const o = world.objects[key];
       if (o.type !== 'fire' || !o.lit) continue;
       const [tx, ty] = key.split(',').map(Number);
       const gx = tx * T + 16, gy = ty * T + 14;
@@ -171,7 +180,7 @@ export function createRenderer(rt) {
     }
 
     // Merlin's light (bond-gated companion aura) — a cool moonish glow
-    if (nightA > 0.05) {
+    if (nightA > 0.05 && !session.venturing) {
       const auras = companion.auras(state);
       const m = companion.merlin(state);
       if (m && auras.light) {
@@ -185,7 +194,7 @@ export function createRenderer(rt) {
     }
 
     // cozy room light when inside at night
-    const inSh = building.playerInside(state);
+    const inSh = session.venturing ? null : building.playerInside(state);
     if (inSh && nightA > 0.05) {
       const gx = (inSh.ax + 2.5) * T, gy = (inSh.ay + 2) * T;
       const grd = ctx.createRadialGradient(gx, gy, 8, gx, gy, 84);
@@ -284,6 +293,16 @@ export function createRenderer(rt) {
       const fr = hopping ? Math.floor(r.hopT) % 2 : (Math.floor(gt2 * 1.5 + r.x) % 6 === 0 ? 1 : 0);
       const hz = hopping ? Math.abs(Math.sin(r.hopT * Math.PI * 0.5)) * 4 : 0;
       ctx.drawImage(set[fr], Math.round(r.x - 10), Math.round(r.y - 12 - hz));
+    }
+
+    function drawWolf(e) {
+      shadow(e.x, e.y + 7, 9);
+      const frames = sp.wolf;
+      const moving = Math.abs(e.vx) + Math.abs(e.vy) > 5;
+      const img = (e.face > 0 ? frames.r : frames.l)[moving ? Math.floor(e.animT) % 2 : 0];
+      if (e.hurtT > 0) ctx.globalAlpha = 0.55;
+      ctx.drawImage(img, Math.round(e.x - 14), Math.round(e.y - 16));
+      ctx.globalAlpha = 1;
     }
 
     function drawNpc(npc) {

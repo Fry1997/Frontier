@@ -16,6 +16,7 @@ export const OBJECT_DEFS = {
   door:    { id: 'door',    sprite: 'door',    passable: true,  tags: ['structure'] },
   chest:   { id: 'chest',   sprite: 'chest',   passable: false, tags: ['furniture', 'storage'] },
   stall:   { id: 'stall',   sprite: 'stall',   passable: false, tags: ['shop'], shopId: 'wandering-cart' },
+  trail:   { id: 'trail',   sprite: 'trail',   passable: false, tags: ['travel'] },
   bed:     { id: 'bed',     sprite: 'bed',     passable: false, tags: ['furniture'] },
   table:   { id: 'table',   sprite: 'table',   passable: false, tags: ['furniture'] },
 };

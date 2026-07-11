@@ -15,5 +15,9 @@ export const ITEMS = {
   turnipSeed: { id: 'turnipSeed', name: 'TURNIP SEEDS', label: 'T.SEEDS',  icon: 'turnipSeed', sprite: 'turnipSeed', stackMax: 99, kind: 'seed', tags: ['seed'],           value: 1 },
   pumpkinSeed:{ id: 'pumpkinSeed',name: 'PUMPKIN SEEDS',label: 'P.SEEDS',  icon: 'pumpkinSeed',sprite: 'pumpkinSeed',stackMax: 99, kind: 'seed', tags: ['seed'],           value: 2 },
   turnip:     { id: 'turnip',     name: 'TURNIP',       label: 'TURNIP',   icon: 'turnip',     sprite: 'turnip',     stackMax: 99, kind: 'food', tags: ['crop', 'food'],   value: 6, restores: { hunger: 0.2 } },
+
+  // Phase 8: venture layer
+  sword:      { id: 'sword',      name: 'STONE SWORD',  label: 'SWORD',    icon: 'sword',      sprite: 'sword',      stackMax: 1,  kind: 'weapon', tags: ['weapon'],       value: 8, weapon: 'sword', damage: 1 },
+  fur:        { id: 'fur',        name: 'WOLF PELT',    label: 'PELT',     icon: 'fur',        sprite: 'fur',        stackMax: 99, kind: 'material', tags: ['pelt'],       value: 5 },
   pumpkin:    { id: 'pumpkin',    name: 'PUMPKIN',      label: 'PUMPKIN',  icon: 'pumpkin',    sprite: 'pumpkin',    stackMax: 99, kind: 'food', tags: ['crop', 'food'],   value: 14, restores: { hunger: 0.35 } },
 };

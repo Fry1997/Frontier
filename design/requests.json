@@ -235,6 +235,47 @@
       "constraints": ["deep-blue robe, wild white hair + beard (current placeholder look)", "warm, knowing — not spooky", "reads clearly beside Arthur at 3x scale"]
     },
     {
+      "requestId": "REQ-0013",
+      "assetId": "enemy.wolf",
+      "status": "requested",
+      "type": "character_sheet",
+      "purpose": "Wolf (Phase 8) — the first venture-layer threat. Side-view runner.",
+      "spec": {
+        "frameSize": { "w": 28, "h": 20 },
+        "states": [
+          { "name": "idle", "frames": 1, "directions": ["right", "left"] },
+          { "name": "run", "frames": 2, "directions": ["right", "left"] }
+        ],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "wolf.png + wolf.json atlas",
+      "integratesAt": "assets/sprites/enemies/",
+      "priority": "medium",
+      "constraints": ["menacing but storybook — this game never kills the player", "left may be mirrored right"]
+    },
+    {
+      "requestId": "REQ-0014",
+      "assetId": "prop.trail_sign",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "The trailhead signpost (Phase 8) — the door to the venture layer.",
+      "spec": {
+        "frameSize": { "w": 30, "h": 40 },
+        "states": [{ "name": "default", "frames": 1, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "trail_sign.png",
+      "integratesAt": "assets/sprites/props/",
+      "priority": "low",
+      "constraints": ["a weathered wooden signpost pointing west — should read as 'adventure this way'"]
+    },
+    {
       "requestId": "REQ-0006",
       "assetId": "prop.wall_segment",
       "status": "requested",
