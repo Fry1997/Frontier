@@ -5,6 +5,7 @@
 
 import { RECIPES } from '../content/recipes.js';
 import { ITEMS } from '../content/items.js';
+import { OBJECT_DEFS } from '../content/objects.js';
 import { isUnlocked, okey } from '../core/state.js';
 import * as inv from './inventory.js';
 
@@ -39,9 +40,16 @@ export function craftItem(rt, id) {
     return;
   }
 
+  // station-gated recipes (the dragon-forge) must be crafted beside one
+  if (r.station && !nearStation(rt, r.station)) {
+    bus.emit('action:denied', {});
+    bus.emit('fx:float', { str: 'NEEDS THE ' + r.station.toUpperCase(), x: state.player.x, y: state.player.y - 56, kind: 'bad' });
+    return;
+  }
   inv.spend(state, r.costs);
   if (r.out) inv.add(state, r.out.itemId, r.out.qty);
-  if (r.equips) state.player.equipped[r.equips] = ITEMS[r.out.itemId][r.equips]; // e.g. tool:'axe', weapon:'sword'
+  if (r.equips === 'weapon') state.player.equipped.weapon = r.out.itemId; // weapons carry per-item damage
+  else if (r.equips) state.player.equipped[r.equips] = ITEMS[r.out.itemId][r.equips]; // e.g. tool:'axe'
   if (r.effect) bus.emit('craft:effect', { effect: r.effect }); // e.g. building handles 'upgradeShelter'
   session.craftOpen = false;
   bus.emit('craft:crafted', { id: r.id, name: r.name, x: state.player.x, y: state.player.y });
@@ -57,11 +65,13 @@ export function placeAnchor(rt) {
   const [dx, dy] = DIRV[p.dir];
   const fx = Math.floor(p.x / T) + dx, fy = Math.floor(p.y / T) + dy;
   const placing = session.placing;
-  if (!placing || placing.w === 1) return [fx, fy];
-  if (p.dir === 'down') return [fx - 2, fy];
-  if (p.dir === 'up') return [fx - 2, fy - 3];
-  if (p.dir === 'left') return [fx - 4, fy - 1];
-  return [fx, fy - 1];
+  if (!placing) return [fx, fy];
+  // centre the footprint on the faced tile, extending away from the player
+  const cx = Math.floor((placing.w - 1) / 2), cy = Math.floor((placing.h - 1) / 2);
+  if (p.dir === 'down') return [fx - cx, fy];
+  if (p.dir === 'up') return [fx - cx, fy - placing.h + 1];
+  if (p.dir === 'left') return [fx - placing.w + 1, fy - cy];
+  return [fx, fy - cy];
 }
 
 // The player's feet collision box is x±6, y−3..y+4 (see tiles.blockedPx).
@@ -97,6 +107,17 @@ export function placeValid(rt) {
   return true;
 }
 
+// Is the player within a couple of tiles of a station object (e.g. forge)?
+export function nearStation(rt, station) {
+  const { state } = rt;
+  const ptx = Math.floor(state.player.x / T), pty = Math.floor(state.player.y / T);
+  for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+    const o = rt.world().objects[okey(ptx + dx, pty + dy)];
+    if (o && OBJECT_DEFS[o.type]?.station === station) return true;
+  }
+  return false;
+}
+
 function inRoom(state, tx, ty) {
   for (const sh of state.structures) {
     for (const room of sh.rooms || []) {
@@ -124,6 +145,12 @@ export function confirmPlace(rt) {
     state.inventory.containers[id] = [];
   } else if (r.place.object === 'wall') {
     state.world.objects[okey(ax, ay)] = { type: 'wall', kind: 'n', face: true, w: true, e: true, built: true };
+  } else if (r.place.w > 1 || r.place.h > 1) {
+    // multi-tile station (e.g. the forge): anchor draws, parts only block
+    for (let dy = 0; dy < r.place.h; dy++) for (let dx = 0; dx < r.place.w; dx++) {
+      state.world.objects[okey(ax + dx, ay + dy)] =
+        (dx === 0 && dy === 0) ? { type: r.place.object } : { type: r.place.object, part: true };
+    }
   } else {
     // furniture (bed/table): a world object, also recorded on its structure
     state.world.objects[okey(ax, ay)] = { type: r.place.object };

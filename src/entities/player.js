@@ -13,6 +13,8 @@ import * as crafting from '../sim/crafting.js';
 import * as farming from '../sim/farming.js';
 import * as companion from '../sim/companion.js';
 import * as combat from '../sim/combat.js';
+import * as dragon from '../sim/dragon.js';
+import * as progression from '../sim/progression.js';
 import * as timeSys from '../world/time.js';
 
 const T = 32;
@@ -81,6 +83,7 @@ export function actionCtx(rt) {
   if (o && o.type === 'trail') {
     return session.venturing ? { k: 'venture', label: 'RETURN' } : { k: 'venture', label: 'VENTURE' };
   }
+  if (o && o.type === 'cave') return dragon.actionFor(rt);
   if (o && OBJECT_DEFS[o.type]?.choppable) {
     return inv.hasTool(state, 'axe') ? { k: 'chop', label: 'CHOP', o, fx, fy } : { k: 'noaxe', label: 'NEED AXE' };
   }
@@ -134,6 +137,7 @@ export function doAction(rt) {
     else rt.ventureApi.enter();
     return;
   }
+  if (c.k === 'dragon') { dragon.visit(rt); return; }
   if (c.k === 'noshop') {
     bus.emit('action:denied', {});
     bus.emit('fx:float', { str: 'CLOSED FOR THE NIGHT', x: state.player.x, y: state.player.y - 56, kind: 'text' });
@@ -200,7 +204,7 @@ function hitTree(rt, o, fx, fy) {
   if (o.hp <= 0) {
     rt.world().objects[okey(fx, fy)] = { type: 'stump' };
     bus.emit('tree:felled', { tx: fx, ty: fy });
-    const n = 2 + (rng.chance(0.5) ? 1 : 0);
+    const n = 2 + (rng.chance(0.5) ? 1 : 0) + (progression.has(rt.state, 'forester') ? 1 : 0);
     for (let i = 0; i < n; i++) {
       rt.world().drops.push({ kind: 'wood', x: fx * T + 16, y: fy * T + 12, pop: true });
     }

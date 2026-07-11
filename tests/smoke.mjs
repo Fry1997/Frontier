@@ -1,11 +1,11 @@
 // Frontier end-to-end smoke test — drives the REAL UI (pointer + key events)
-// through all shipped phases: onboarding, crafting, chopping, renewal,
-// save/load + migrations, building, storage, sleep, farming, trading,
-// NPCs/dialogue/relationships, events, Merlin, and the venture layer.
+// through all ten shipped phases: onboarding, crafting, chopping, renewal,
+// save/load + all four migrations, building, storage, sleep, farming,
+// trading, NPCs/dialogue/relationships, events, Merlin, venture combat,
+// the dragon, the forge, and the progression path. ~90 checkpoints.
 //
 // Run:  http-server -p 8321 &  then  node tests/smoke.mjs
-// Env:  SMOKE_URL (default http://127.0.0.1:8321), SMOKE_OUT (screenshots),
-//       CHROMIUM (executable path), PLAYWRIGHT_DIR (playwright install)
+// Env:  SMOKE_URL (default http://127.0.0.1:8321), SMOKE_OUT (screenshots)
 // Frontier Phase 1 smoke test — drives the real UI (clicks + key events).
 import { createRequire } from 'module';
 const require = createRequire('/opt/node22/lib/node_modules/playwright/');
@@ -45,6 +45,28 @@ await page.screenshot({ path: OUT + '/02-game.png' });
 // helper: walk the player toward a world position by holding arrow keys
 const FLIP = { ArrowLeft: 'ArrowRight', ArrowRight: 'ArrowLeft', ArrowUp: 'ArrowDown', ArrowDown: 'ArrowUp' };
 async function walkToPx(gx, gy, timeoutMs = 25000) {
+  // inside a shelter? leave through the (south-center) door first — the
+  // greedy walker can't discover doors on the far side of a target
+  const esc = await page.evaluate(() => {
+    const st = window.__frontier.state, p = st.player;
+    if (window.__frontier.session.venturing) return null;
+    const ptx = Math.floor(p.x / 32), pty = Math.floor(p.y / 32);
+    for (const sh of st.structures) {
+      if (ptx >= sh.ax && ptx <= sh.ax + 4 && pty >= sh.ay && pty <= sh.ay + 3) {
+        return { x: (sh.ax + 2) * 32 + 16, y: (sh.ay + 4) * 32 + 24 };
+      }
+    }
+    return null;
+  });
+  if (esc && Math.hypot(gx - esc.x, gy - esc.y) > 20) {
+    for (let i = 0; i < 60; i++) {
+      const p = await page.evaluate(() => ({ x: window.__frontier.state.player.x, y: window.__frontier.state.player.y }));
+      if (p.y >= esc.y - 8) break;
+      const dx = esc.x - p.x;
+      const key = Math.abs(dx) > 6 ? (dx > 0 ? 'ArrowRight' : 'ArrowLeft') : 'ArrowDown';
+      await page.keyboard.down(key); await page.waitForTimeout(90); await page.keyboard.up(key);
+    }
+  }
   const t0 = Date.now();
   let slideDir = null, noProg = 0, bestDist = Infinity;
   const trail = [];
@@ -268,7 +290,7 @@ async function aim(faceKey, retreatKey) {
 // --- build a shelter on the camp dirt patch ---
 await grant('wood', 30); await grant('stick', 10); await grant('stone', 10);
 await walkTo(22, 13);
-await alignTo(736, 426); // pin the row so the anchor is always (20,14)
+await alignTo(728, 426); // pin row AND column (mid-tile 22,13) so the anchor is always (20,14)
 await craftByName('SHELTER');
 if (!await aim('ArrowDown', 'ArrowUp')) fail('shelter placement not valid: ' + await actionLabel()); // anchor on the dirt patch
 await pressAction();
@@ -463,8 +485,14 @@ farm = await page.evaluate(() => window.__frontier.state.farm[0]);
 log('plot after plant+water:', JSON.stringify(farm));
 if (farm.cropId !== 'turnip' || !farm.watered) fail('plant/water state wrong');
 async function sleepOnce() {
-  await walkTo(22, 18.6);
-  if (!await walkTo(22, 16)) fail('could not re-enter shelter to sleep');
+  const info = await page.evaluate(() => {
+    const sh = window.__frontier.state.structures[0];
+    const bedKey = Object.keys(window.__frontier.state.world.objects).find(k => window.__frontier.state.world.objects[k].type === 'bed');
+    return { ax: sh.ax, ay: sh.ay, bed: bedKey ? bedKey.split(',').map(Number) : null };
+  });
+  if (!info.bed) fail('no bed to sleep in');
+  await walkTo(info.ax + 2, info.ay + 4.6); // below the door
+  if (!await walkTo(info.bed[0], info.bed[1] + 1)) fail('could not re-enter shelter to sleep');
   await face('ArrowUp');
   if ((await actionLabel()) !== 'SLEEP') fail('expected SLEEP, got ' + await actionLabel());
   await pressAction();
@@ -830,7 +858,9 @@ if (afterFight.furDrops) await collect('fur');
 if (!(await inv()).fur) fail('no pelt looted (neither on the ground nor in the pack)');
 log('pelts in pack:', (await inv()).fur);
 
-// walk back and RETURN
+// walk back and RETURN (combat proven; clear the pack so knockback
+// doesn't pinball the walker on the way home)
+await page.evaluate(() => window.__frontier.venture.enemies.forEach(e => { e.alive = false; }));
 if (!await walkTo(2, 10, 30000)) fail('could not walk back to the darkwood trail');
 await face('ArrowLeft');
 if ((await actionLabel()) !== 'RETURN') fail('expected RETURN at the trail, got ' + await actionLabel());
@@ -898,6 +928,160 @@ const v4 = await page.evaluate(() => ({
 log('probe v3→v4 migration →', JSON.stringify(v4));
 if (v4.ver !== 4 || v4.hp !== 6 || !v4.trail) fail('v3→v4 migration wrong: ' + JSON.stringify(v4));
 // ==================== end Phase 8 ====================
+
+// ==================== Phase 9: the dragon ====================
+await grant('meatCk', 5);
+await page.evaluate(() => { window.__frontier.state.player.hp = 6; });
+if (!await walkTo(2, 13)) fail('could not reach the trailhead (dragon leg)');
+await face('ArrowLeft');
+await pressAction(); // VENTURE
+await page.waitForTimeout(400);
+if (!(await page.evaluate(() => window.__frontier.session.venturing))) fail('venture re-entry failed');
+// the wolves were proven in Phase 8 — clear the field to isolate the dragon leg
+await page.evaluate(() => window.__frontier.venture.enemies.forEach(e => { e.alive = false; }));
+if (!await walkTo(17, 3, 40000)) fail('could not reach the dragon cave');
+await face('ArrowRight');
+if ((await actionLabel()) !== 'ENTER') fail('expected ENTER at the cave, got ' + await actionLabel());
+await pressAction();
+await page.waitForTimeout(300);
+await page.screenshot({ path: OUT + '/14-dragon.png' });
+if (!(await page.evaluate(() => window.__frontier.state.flags.dragonMet))) fail('dragonMet flag not set');
+await page.locator('.dialogue-panel').dispatchEvent('pointerdown');
+// offer food → dragonfire
+await face('ArrowRight');
+if ((await actionLabel()) !== 'OFFER FOOD') fail('expected OFFER FOOD, got ' + await actionLabel());
+await pressAction();
+await page.waitForTimeout(300);
+const dragonState = await page.evaluate(() => ({
+  dfire: window.__frontier.state.inventory.slots.find(s => s.itemId === 'dragonfire')?.qty,
+  rel: window.__frontier.state.relationships.dragon?.value,
+  meat: window.__frontier.state.inventory.slots.find(s => s.itemId === 'meatCk')?.qty,
+}));
+log('dragon fed:', JSON.stringify(dragonState));
+if (dragonState.dfire !== 1 || dragonState.rel !== 3 || dragonState.meat !== 3) fail('feeding loop wrong: ' + JSON.stringify(dragonState));
+await page.locator('.dialogue-panel').dispatchEvent('pointerdown');
+// 🔍 probe: no second course today — cooldown holds
+await face('ArrowRight');
+const revisit = await actionLabel();
+log('probe feed cooldown →', revisit);
+if (revisit !== 'VISIT') fail('expected VISIT during cooldown, got ' + revisit);
+await pressAction();
+await page.waitForTimeout(200);
+if ((await page.evaluate(() => window.__frontier.state.inventory.slots.find(s => s.itemId === 'dragonfire')?.qty)) !== 1) fail('cooldown visit changed dragonfire');
+await page.locator('.dialogue-panel').dispatchEvent('pointerdown');
+// home again
+if (!await walkTo(2, 10, 40000)) fail('could not walk back to the darkwood trail (dragon leg)');
+await face('ArrowLeft');
+await pressAction(); // RETURN
+await page.waitForTimeout(300);
+
+// the dragon-forge: unlocked by meeting the dragon
+await grant('stone', 12); await grant('wood', 10);
+await walkTo(33, 20);
+const forgeLabel = await craftByName('DRAGON-FORGE');
+if (forgeLabel !== 'MAKE') fail('forge not craftable after meeting the dragon: ' + forgeLabel);
+if (!await aim('ArrowDown', 'ArrowUp')) fail('forge placement not valid');
+await pressAction();
+const forgeTiles = await page.evaluate(() => Object.values(window.__frontier.state.world.objects).filter(o => o.type === 'forge').length);
+log('forge tiles:', forgeTiles);
+if (forgeTiles !== 4) fail('2x2 forge should occupy 4 tiles, got ' + forgeTiles);
+// 🔍 probe: the flame-forged sword needs the forge nearby
+await walkTo(38, 26);
+const farLabel = await craftByName('FLAME-FORGED SWORD');
+if (farLabel !== 'MAKE') fail('flame sword should be affordable: ' + farLabel);
+let smith = await page.evaluate(() => ({
+  dfire: window.__frontier.state.inventory.slots.find(s => s.itemId === 'dragonfire')?.qty,
+  weapon: window.__frontier.state.player.equipped.weapon,
+}));
+log('probe forging far from forge →', JSON.stringify(smith));
+if (smith.dfire !== 1 || smith.weapon === 'flameSword') fail('crafted away from the forge!');
+// beside the forge it works
+await walkTo(33, 20);
+await craftByName('FLAME-FORGED SWORD');
+smith = await page.evaluate(() => ({
+  dfire: window.__frontier.state.inventory.slots.find(s => s.itemId === 'dragonfire')?.qty,
+  weapon: window.__frontier.state.player.equipped.weapon,
+}));
+log('forged:', JSON.stringify(smith));
+if (smith.dfire !== undefined || smith.weapon !== 'flameSword') fail('flame sword not forged: ' + JSON.stringify(smith));
+await page.screenshot({ path: OUT + '/15-forge.png' });
+// ==================== end Phase 9 ====================
+
+// ==================== Phase 10: the path ====================
+const pathState = await page.evaluate(() => window.__frontier.state.progression.skill);
+log('path state after a long life of deeds:', JSON.stringify(pathState));
+if (!(pathState.xp > 0 || pathState.points > 0)) fail('deeds earned no XP');
+await page.evaluate(() => { window.__frontier.state.progression.skill.points = 3; window.__frontier.bus.emit('ui:update', {}); });
+await page.locator('.chip-btn', { hasText: 'PATH' }).dispatchEvent('pointerdown');
+await page.waitForTimeout(300);
+await page.screenshot({ path: OUT + '/16-path.png' });
+// 🔍 probe: prerequisite gating — WARDEN locked until FORESTER
+const nodeBtn = name => page.locator('.cp-row').filter({ has: page.locator('.cp-name', { hasText: new RegExp('^' + name + '$') }) }).locator('.cp-make');
+const wardenBtn = nodeBtn('WARDEN');
+if ((await wardenBtn.textContent()) !== 'LOCKED') fail('WARDEN should be LOCKED before FORESTER');
+await wardenBtn.dispatchEvent('pointerdown');
+await page.waitForTimeout(200);
+if ((await page.evaluate(() => window.__frontier.state.progression.skill.points)) !== 3) fail('locked node consumed points!');
+// unlock FORESTER then WARDEN
+await nodeBtn('FORESTER').dispatchEvent('pointerdown');
+await page.waitForTimeout(250);
+const hpBeforeWarden = await page.evaluate(() => window.__frontier.state.player.hp);
+await wardenBtn.dispatchEvent('pointerdown');
+await page.waitForTimeout(250);
+const pathAfter = await page.evaluate(() => ({
+  unlocked: window.__frontier.state.progression.skill.unlocked,
+  points: window.__frontier.state.progression.skill.points,
+  hp: window.__frontier.state.player.hp,
+}));
+log('path after unlocks:', JSON.stringify(pathAfter), '(hp before warden:', hpBeforeWarden + ')');
+if (!pathAfter.unlocked.includes('forester') || !pathAfter.unlocked.includes('warden')) fail('unlocks missing');
+if (pathAfter.points !== 0) fail('points should be spent to 0, got ' + pathAfter.points);
+if (pathAfter.hp !== hpBeforeWarden + 2) fail('warden should grant 2 hearts immediately');
+await page.locator('.chip-btn', { hasText: 'PATH' }).dispatchEvent('pointerdown'); // close
+
+// forester effect: a felled tree yields at least 3 wood now
+const woodBefore = (await inv()).wood || 0;
+const tgt2 = await page.evaluate(() => {
+  const rt = window.__frontier, p = rt.state.player;
+  let best = null;
+  for (const [k, o] of Object.entries(rt.state.world.objects)) {
+    if (o.type !== 'tree') continue;
+    const [tx, ty] = k.split(',').map(Number);
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = tx + dx, ny = ty + dy;
+      if (rt.tiles.blockedTile(nx, ny)) continue;
+      const d = Math.hypot(nx * 32 + 16 - p.x, ny * 32 + 16 - p.y);
+      if (!best || d < best.d) best = { tx, ty, nx, ny, d };
+    }
+  }
+  return best;
+});
+if (!await walkTo(tgt2.nx, tgt2.ny)) fail('could not reach tree for forester check');
+await face(tgt2.tx > tgt2.nx ? 'ArrowRight' : tgt2.tx < tgt2.nx ? 'ArrowLeft' : tgt2.ty > tgt2.ny ? 'ArrowDown' : 'ArrowUp');
+for (let k = 0; k < 3; k++) { await page.keyboard.press('e'); await page.waitForTimeout(600); }
+for (let k = 0; k < 5; k++) { if (!await collect('wood')) break; }
+const woodGained = ((await inv()).wood || 0) - woodBefore;
+log('probe forester yield → +' + woodGained, 'wood');
+if (woodGained < 3) fail('forester should guarantee >= 3 wood, got ' + woodGained);
+
+// persistence: the path survives reload
+await page.evaluate(() => window.__frontier.bus.emit('quest:advanced', {}));
+await page.waitForTimeout(200);
+await page.reload();
+await page.waitForTimeout(1200);
+await page.locator('.t-actions .primary-btn').dispatchEvent('pointerdown');
+await page.waitForTimeout(600);
+const p10 = await page.evaluate(() => ({
+  unlocked: window.__frontier.state.progression.skill.unlocked,
+  dragonMet: window.__frontier.state.flags.dragonMet,
+  weapon: window.__frontier.state.player.equipped.weapon,
+  forge: Object.values(window.__frontier.state.world.objects).filter(o => o.type === 'forge').length,
+}));
+log('phase 9+10 restored:', JSON.stringify(p10));
+if (!p10.unlocked.includes('warden') || !p10.dragonMet || p10.weapon !== 'flameSword' || p10.forge !== 4) {
+  fail('phase 9/10 state lost: ' + JSON.stringify(p10));
+}
+// ==================== end Phase 10 ====================
 
 // 🔍 probe: v1 save (no rooms on structures) must migrate to v2
 await page.reload();

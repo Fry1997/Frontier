@@ -109,7 +109,10 @@ export const MAPS = {
     rabbitSpawns: [],
     rabbitCount: 0,
     zones: [],
-    places: [{ type: 'trail', tx: 1, ty: 10 }],
+    places: [
+      { type: 'trail', tx: 1, ty: 10 },
+      { type: 'cave', tx: 18, ty: 3 }, // the dragon's cave, deep in the wood
+    ],
     enemySpawns: [[20, 4], [8, 15], [12, 8], [20, 16], [12, 3]],
   },
 

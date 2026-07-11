@@ -23,6 +23,7 @@ import * as farming from './sim/farming.js';
 import * as economy from './sim/economy.js';
 import { createEvents } from './sim/events.js';
 import * as combat from './sim/combat.js';
+import * as progression from './sim/progression.js';
 import { createVenture } from './world/venture.js';
 import * as saveio from './io/save.js';
 import { createInput } from './io/input.js';
@@ -86,6 +87,7 @@ rt.ventureApi = createVenture(rt);
 building.attach(rt); // bus-wired effects (e.g. the tier upgrade)
 farming.attach(rt);  // crop growth on day rollover
 combat.attach(rt);   // sleep heals
+progression.attach(rt); // deeds feed the path (XP → points)
 const renderer = createRenderer(rt);
 
 function freshSession() {
@@ -96,6 +98,7 @@ function freshSession() {
     chestOpen: null, // containerId while a chest panel is open
     shopOpen: null,  // shopId while a shop panel is open
     eventOpen: null, // defId while an issue panel is open
+    pathOpen: false, // progression panel
     venturing: false,
     placing: null,
     player: { animT: 0, actT: 0, cookT: 0, moving: false, swingCb: null },
@@ -223,6 +226,12 @@ ui.wire(rt, {
     bus.emit('ui:click', {});
     bus.emit('ui:update', {});
   },
+  onPathToggle() {
+    rt.session.pathOpen = !rt.session.pathOpen;
+    bus.emit('ui:click', {});
+    bus.emit('ui:update', {});
+  },
+  onPathUnlock(nodeId) { progression.unlock(rt, nodeId); },
   onCyclePalette() {
     const ks = Object.keys(PALETTES);
     setPalette(ks[(ks.indexOf(rt.view.palKey) + 1) % ks.length]);
@@ -251,6 +260,7 @@ bus.on('input:cancel', () => {
   else if (rt.session.chestOpen) { rt.session.chestOpen = null; bus.emit('ui:update', {}); }
   else if (rt.session.shopOpen) { rt.session.shopOpen = null; bus.emit('ui:update', {}); }
   else if (rt.session.eventOpen) { rt.session.eventOpen = null; bus.emit('ui:update', {}); }
+  else if (rt.session.pathOpen) { rt.session.pathOpen = false; bus.emit('ui:update', {}); }
   else if (rt.session.craftOpen) { rt.session.craftOpen = false; bus.emit('ui:update', {}); }
 });
 bus.on('input:palette', () => {

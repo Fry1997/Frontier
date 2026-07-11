@@ -109,5 +109,11 @@ export function attachAudio(bus, sfx) {
   on('enemy:killed',     () => { sfx.poof(); sfx.squeak(); });
   on('player:hurt',      () => sfx.hurt());
   on('combat:warded',    () => sfx.ward());
+  // Phase 9: the dragon
+  on('dragon:met',       () => sfx.home());
+  on('dragon:gift',      () => { sfx.cook(); sfx.coin(); });
+  // Phase 10: the path
+  on('progression:point',    () => sfx.quest());
+  on('progression:unlocked', () => sfx.home());
   return sfx;
 }

@@ -597,6 +597,50 @@ function pTrail(p) {
   return outline(c, p.outline);
 }
 
+/* ---------- the dragon (Phase 9) ---------- */
+function pCave(p) {
+  const c = mk(56, 46, ({ R, P }) => {
+    const rnd = rng(50);
+    blob(R, rnd, 28, 26, 26, 18, p.rock);
+    blob(R, rng(51), 26, 20, 20, 12, p.rockHi);
+    speck(P, rnd, 6, 10, 44, 30, p.rockLo, 24);
+    // the mouth
+    blob(R, rng(52), 28, 34, 12, 10, p.outline);
+    R(18, 30, 20, 14, '#0d080f');
+    P(24, 36, '#2a1b30'); P(31, 34, '#2a1b30');
+    // two embers deep inside
+    P(25, 37, p.ember); P(31, 37, p.ember);
+    // scorched grass at the entrance
+    speck(P, rnd, 14, 42, 28, 4, p.outline, 8);
+  });
+  return outline(c, p.outline);
+}
+function pForge(p) {
+  const c = mk(64, 62, ({ R, P }) => {
+    const rnd = rng(53);
+    // stone body
+    R(6, 18, 52, 40, p.stoneI);
+    R(4, 54, 56, 6, p.rockLo);
+    speck(P, rnd, 8, 20, 48, 34, p.rockLo, 26);
+    speck(P, rnd, 8, 20, 48, 34, p.stoneIHi, 14);
+    // chimney
+    R(40, 2, 14, 18, p.stoneI);
+    R(38, 2, 18, 4, p.stoneIHi);
+    R(43, 4, 8, 2, p.outline);
+    // fire mouth
+    R(14, 34, 22, 20, p.outline);
+    R(16, 36, 18, 16, '#1a0d12');
+    blob(R, rng(54), 25, 47, 8, 6, p.fire1);
+    blob(R, rng(55), 25, 48, 5, 4, p.fire2);
+    P(24, 44, p.fire3); P(27, 45, p.fire3);
+    // anvil ledge
+    R(40, 40, 16, 6, p.rockLo);
+    R(42, 34, 12, 6, p.stoneIHi);
+    R(46, 32, 6, 3, p.outline);
+  });
+  return outline(c, p.outline);
+}
+
 /* ---------- Arthur ---------- */
 function headFront(R, P, p, hy, hair) {
   // base face
@@ -846,6 +890,9 @@ function icon(p, kind) {
     if (kind === 'sword') { for (let i = 0; i < 7; i++) P(4 + i, 11 - i, p.stoneIHi); for (let i = 0; i < 7; i++) P(5 + i, 11 - i, p.stoneI); R(3, 10, 3, 3, p.trunk); P(2, 13, p.trunkLo); R(5, 8, 1, 5, p.trunkLo); }
     if (kind === 'fur') { blob(R, rng(3), 8, 8, 5, 4, p.fur); dith(P, 5, 8, 7, 3, p.furLo); P(5, 4, p.furHi); P(10, 5, p.furHi); P(12, 9, p.furLo); }
     if (kind === 'heart') { R(4, 5, 3, 3, p.meatRaw); R(9, 5, 3, 3, p.meatRaw); R(3, 7, 10, 3, p.meatRaw); R(5, 10, 6, 2, p.meatRaw); R(7, 12, 2, 1, p.meatRawLo); P(5, 6, '#ffffff'); R(4, 10, 8, 1, p.meatRawLo); }
+    if (kind === 'dragonfire') { R(6, 3, 4, 2, p.stoneIHi); R(5, 5, 6, 8, 'rgba(160,200,220,0.5)'); R(6, 7, 4, 5, p.fire1); R(7, 8, 2, 3, p.fire2); P(7, 6, p.fire3); R(5, 13, 6, 1, p.stoneI); }
+    if (kind === 'flameSword') { for (let i = 0; i < 7; i++) P(4 + i, 11 - i, p.fire3); for (let i = 0; i < 7; i++) P(5 + i, 11 - i, p.fire2); P(10, 4, p.fire1); R(3, 10, 3, 3, p.trunk); P(2, 13, p.trunkLo); }
+    if (kind === 'forge') { R(3, 6, 10, 8, p.stoneI); R(3, 6, 10, 1, p.stoneIHi); R(9, 2, 3, 5, p.stoneI); R(5, 9, 5, 4, p.outline); P(7, 11, p.fire2); P(6, 12, p.fire1); }
     if (kind === 'sun') {
       R(6, 6, 5, 5, p.fire3); R(7, 5, 3, 1, p.fire3); R(7, 11, 3, 1, p.fire3);
       P(5, 6, p.fire3); P(11, 6, p.fire3); P(5, 10, p.fire3); P(11, 10, p.fire3);
@@ -884,7 +931,7 @@ export function buildSprites(p, hair = 'scruff') {
   };
   rab.sitL = rab.sit.map(mirror); rab.hopL = rab.hop.map(mirror);
   const icons = {};
-  for (const k of ['stick', 'stone', 'wood', 'axe', 'meatRaw', 'meatCk', 'hunger', 'thirst', 'hammer', 'fire', 'home', 'sun', 'moon', 'chest', 'wall', 'bed', 'table', 'hoe', 'coin', 'turnip', 'pumpkin', 'turnipSeed', 'pumpkinSeed', 'sword', 'fur', 'heart']) icons[k] = icon(p, k);
+  for (const k of ['stick', 'stone', 'wood', 'axe', 'meatRaw', 'meatCk', 'hunger', 'thirst', 'hammer', 'fire', 'home', 'sun', 'moon', 'chest', 'wall', 'bed', 'table', 'hoe', 'coin', 'turnip', 'pumpkin', 'turnipSeed', 'pumpkinSeed', 'sword', 'fur', 'heart', 'dragonfire', 'flameSword', 'forge']) icons[k] = icon(p, k);
   return {
     tiles: {
       grass: [tGrass(p, 1), tGrass(p, 2), tGrass(p, 5)],
@@ -904,6 +951,8 @@ export function buildSprites(p, hair = 'scruff') {
       cropWithered: pCropWithered(p),
       trail: pTrail(p),
       fur: pFur(p),
+      cave: pCave(p), forge: pForge(p),
+      dragonfire: pFur(p), flameSword: pFur(p), // ground-drop stand-ins (rarely dropped)
     },
     wolf: (() => {
       const r = [pWolf(p, 0), pWolf(p, 1)];

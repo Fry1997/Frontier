@@ -21,6 +21,8 @@ order; priority tells you where the value is.*
 | REQ-0004 | `prop.table` | prop | low | Table (interior furniture) |
 | REQ-0006 | `prop.wall_segment` | prop | low | Freestanding fence/palisade segment |
 | REQ-0013 | `enemy.wolf` | character_sheet | medium | Wolf — first venture threat (idle/run, L/R) |
+| REQ-0015 | `prop.dragon_cave` | prop | medium | The dragon's cave mouth (Darkwood landmark) |
+| REQ-0016 | `prop.dragon_forge` | prop | medium | The dragon-forge (2×2 station, 2 lit frames) |
 | REQ-0008 | `crops.turnip` | prop | low | Turnip growth stages (3 frames) |
 | REQ-0009 | `crops.pumpkin` | prop | low | Pumpkin growth stages (5 frames) |
 | REQ-0014 | `prop.trail_sign` | prop | low | Trailhead signpost (venture entrance) |

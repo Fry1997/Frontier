@@ -10,7 +10,27 @@ npx serve .        # or: python3 -m http.server
 
 Move with WASD / left-thumb joystick, act with **E** / the action button, craft with **C**.
 
-## Status — Phase 8 complete (Venture & teeth)
+## Status — ALL TEN PHASES COMPLETE
+
+The full build order from the technical handover (§7) is implemented, verified end-to-end, and playable.
+
+### Phase 9 (The dragon)
+
+- **The cave** sits deep in the Darkwood. ENTER it once and the dragon wakes — *a neighbour, not a boss*. It asks for food.
+- **The feeding loop** — bring 2 cooked food every few days (**OFFER FOOD**); the dragon is a relationship like any neighbour's, and each offering yields **DRAGON-FIRE**.
+- **The dragon-forge** — buildable at camp once you've met the dragon (2×2, always burning). The **FLAME-FORGED SWORD** (double damage) can only be crafted *beside* the forge and consumes dragon-fire — the higher-tier crafting loop: cook → trek → feed → carry fire home → forge.
+
+### Phase 10 (Progression & discovery)
+
+- **The trees fork resolved: ONE unified path** ("The Path" — the handover leans toward fewer, richer). Deeds earn XP over the bus (chopping, harvests, sales, builds, events, kills, dragon gifts, friendships); every 20 XP grants a point.
+- **Nodes** (`src/content/progression.js`): FORESTER (+1 wood) and HARVESTER (+1 crop) open the path; WARDEN (+2 max hearts) and MYSTIC (stronger ward) sit behind them as prerequisites. Effects live where they act — chop yield, harvest yield, max hearts, ward chance all consult the path.
+- **PATH panel** in the top bar (pulses when you have points to spend).
+
+### The test suite
+
+`tests/smoke.mjs` drives every phase through the real UI — ~90 checkpoints including all four save migrations, requirement gating, the wither/downed/ward/cooldown probes, and persistence round-trips. Two consecutive full runs green.
+
+## Phase 8 (Venture & teeth)
 
 New in Phase 8:
 

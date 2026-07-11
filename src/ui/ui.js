@@ -7,6 +7,8 @@ import { PALETTES, HAIRS, makePortrait, makeThumb } from '../assets/sprites.js';
 import { ITEMS } from '../content/items.js';
 import * as crafting from '../sim/crafting.js';
 import * as economy from '../sim/economy.js';
+import * as progression from '../sim/progression.js';
+import { NODES, XP_PER_POINT } from '../content/progression.js';
 import * as inv from '../sim/inventory.js';
 import * as player from '../entities/player.js';
 
@@ -31,10 +33,14 @@ export function createUI(wrap) {
   wrap.appendChild(joyZone);
 
   const topbar = el('div', 'topbar hidden');
+  const pathBtn = el('button', 'chip-btn', 'PATH');
   const sndBtn = el('button', 'chip-btn', 'SND ON');
   const palBtn = el('button', 'chip-btn accent', 'STYLE');
-  topbar.append(sndBtn, palBtn);
+  topbar.append(pathBtn, sndBtn, palBtn);
   wrap.appendChild(topbar);
+
+  const pathPanel = el('div', 'craft-panel hidden');
+  wrap.appendChild(pathPanel);
 
   const controls = el('div', 'controls hidden');
   const cancelBtn = el('button', 'cancel-btn hidden', 'CANCEL');
@@ -81,6 +87,7 @@ export function createUI(wrap) {
   function wire(runtime, handlers) {
     rt = runtime;
     H = handlers;
+    pathBtn.addEventListener('pointerdown', () => H.onPathToggle());
     sndBtn.addEventListener('pointerdown', () => H.onToggleSound());
     palBtn.addEventListener('pointerdown', () => H.onCyclePalette());
     craftBtn.addEventListener('pointerdown', () => H.onCraftToggle());
@@ -276,6 +283,32 @@ export function createUI(wrap) {
     }
   }
 
+  // --- the path (progression) panel ---
+  function renderPath() {
+    const { state } = rt;
+    const s = progression.skill(state);
+    pathPanel.innerHTML = `
+      <div class="cp-head"><span>THE PATH &nbsp;·&nbsp; ${s.points} POINT${s.points === 1 ? '' : 'S'} <span class="dp-tier">${s.xp}/${XP_PER_POINT} XP</span></span><button class="cp-close">X</button></div>
+      <div class="cp-list" data-list="nodes"></div>
+      <div class="ch-hint">DEEDS EARN XP · XP OPENS THE PATH</div>`;
+    pathPanel.querySelector('.cp-close').addEventListener('pointerdown', () => H.onPathToggle());
+    const host = pathPanel.querySelector('[data-list=nodes]');
+    for (const node of NODES) {
+      const owned = progression.has(state, node.id);
+      const can = progression.canUnlock(state, node);
+      const prereqNames = node.prereqs.map(p => NODES.find(n => n.id === p)?.name).join(', ');
+      const row = el('div', 'cp-row');
+      row.innerHTML = `
+        <div class="cp-mid">
+          <span class="cp-name">${node.name}</span>
+          <span class="cp-desc">${node.desc}${prereqNames ? ' · AFTER ' + prereqNames : ''}</span>
+        </div>
+        <button class="cp-make ${owned ? 'done' : can ? 'can' : ''}">${owned ? 'WALKED' : can ? node.cost + ' PT' : 'LOCKED'}</button>`;
+      row.querySelector('.cp-make').addEventListener('pointerdown', () => { if (can) H.onPathUnlock(node.id); });
+      host.appendChild(row);
+    }
+  }
+
   // --- reactive update (visibility + craft panel) ---
   function update() {
     if (!rt) return;
@@ -289,6 +322,13 @@ export function createUI(wrap) {
     if (inGame && session.chestOpen) renderChest();
     shopPanel.classList.toggle('hidden', !inGame || !session.shopOpen);
     if (inGame && session.shopOpen) renderShop();
+    pathPanel.classList.toggle('hidden', !inGame || !session.pathOpen);
+    if (inGame && session.pathOpen) renderPath();
+    if (state) {
+      const pts = progression.skill(state).points;
+      pathBtn.textContent = pts > 0 ? `PATH (${pts})` : 'PATH';
+      pathBtn.classList.toggle('pulse', pts > 0);
+    }
     const issues = inGame && state ? state.events.active : [];
     issueBtn.classList.toggle('hidden', !issues.length || !!session.eventOpen);
     if (issues.length) {

@@ -86,6 +86,28 @@ export const RECIPES = [
     place: { w: 1, h: 1, object: 'table', ground: ['f'], room: true },
     requiresFlag: 'shelterBuilt',
   },
+  // --- Phase 9: the dragon ---
+  {
+    id: 'forge',
+    name: 'DRAGON-FORGE',
+    desc: 'BURNS WITH DRAGON-FIRE',
+    icon: 'forge',
+    costs: [{ itemId: 'stone', qty: 10 }, { itemId: 'wood', qty: 8 }],
+    place: { w: 2, h: 2, object: 'forge', ground: ['g', 'd'] },
+    requiresFlag: 'dragonMet',
+  },
+  {
+    id: 'flameSword',
+    name: 'FLAME-FORGED SWORD',
+    desc: 'BITES TWICE AS DEEP',
+    icon: 'flameSword',
+    out: { itemId: 'flameSword', qty: 1 },
+    costs: [{ itemId: 'dragonfire', qty: 1 }, { itemId: 'wood', qty: 2 }, { itemId: 'stone', qty: 2 }],
+    once: true,
+    equips: 'weapon',
+    station: 'forge',
+    requiresFlag: 'dragonMet',
+  },
   {
     id: 'homeUpgrade',
     name: 'TIMBER HOME',

@@ -276,6 +276,44 @@
       "constraints": ["a weathered wooden signpost pointing west — should read as 'adventure this way'"]
     },
     {
+      "requestId": "REQ-0015",
+      "assetId": "prop.dragon_cave",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "The dragon's cave mouth (Phase 9) — a landmark set-piece in the Darkwood.",
+      "spec": {
+        "frameSize": { "w": 56, "h": 46 },
+        "states": [{ "name": "default", "frames": 1, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "dragon_cave.png",
+      "integratesAt": "assets/sprites/props/",
+      "priority": "medium",
+      "constraints": ["dark mouth with two faint ember eyes deep inside", "inviting-ominous, not horror — the dragon is a neighbour"]
+    },
+    {
+      "requestId": "REQ-0016",
+      "assetId": "prop.dragon_forge",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "The dragon-forge (Phase 9) — a 2x2-tile station that burns with dragon-fire; the endgame crafting centrepiece.",
+      "spec": {
+        "frameSize": { "w": 64, "h": 62 },
+        "states": [{ "name": "lit", "frames": 2, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "dragon_forge.png + dragon_forge.json",
+      "integratesAt": "assets/sprites/props/",
+      "priority": "medium",
+      "constraints": ["stone furnace + chimney + anvil ledge over a 2x2 tile footprint", "the fire mouth should read as unnaturally alive — it's dragon-fire"]
+    },
+    {
       "requestId": "REQ-0006",
       "assetId": "prop.wall_segment",
       "status": "requested",

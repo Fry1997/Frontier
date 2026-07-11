@@ -108,6 +108,7 @@ export function createRenderer(rt) {
     const ents = [];
     for (const key of Object.keys(world.objects)) {
       const o = world.objects[key];
+      if (o.part) continue; // multi-tile object: only the anchor draws
       const [tx, ty] = key.split(',').map(Number);
       if (tx < x0 - 1 || tx > x1 + 1 || ty < y0 - 2 || ty > y1 + 1) continue;
       ents.push({ y: ty * T + T - (o.type === 'stump' ? 8 : 0), draw: () => drawObj(o, tx, ty, ff) });
@@ -163,12 +164,13 @@ export function createRenderer(rt) {
     if (warmA > 0.01) { ctx.fillStyle = `rgba(255,150,60,${warmA})`; ctx.fillRect(cx, cy, VW, VH); }
     if (nightA > 0.01) { ctx.fillStyle = `rgba(26,22,64,${0.48 * nightA})`; ctx.fillRect(cx, cy, VW, VH); }
 
-    // fire glow
+    // fire glow (campfires + the forge mouth)
     for (const key of Object.keys(world.objects)) {
       const o = world.objects[key];
-      if (o.type !== 'fire' || !o.lit) continue;
+      const isForge = o.type === 'forge' && !o.part;
+      if (!isForge && (o.type !== 'fire' || !o.lit)) continue;
       const [tx, ty] = key.split(',').map(Number);
-      const gx = tx * T + 16, gy = ty * T + 14;
+      const gx = tx * T + (isForge ? 26 : 16), gy = ty * T + (isForge ? 44 : 14);
       const rr = 54 + Math.sin(gt * 7) * 3 + nightA * 14;
       const grd = ctx.createRadialGradient(gx, gy, 4, gx, gy, rr);
       const a = 0.15 + nightA * 0.3;
@@ -251,6 +253,8 @@ export function createRenderer(rt) {
       else if (o.type === 'door') ctx.drawImage(sp.props.door, X, Y - 14);
       else if (o.type === 'chest') { shadow(X + 16, Y + T - 4, 10); ctx.drawImage(sp.props.chest, X + 3, Y + 8); }
       else if (o.type === 'stall') { shadow(X + 16, Y + T - 2, 15); ctx.drawImage(sp.props.stall, X - 16, Y - 26); }
+      else if (o.type === 'cave') { shadow(X + 16, Y + T - 2, 16); ctx.drawImage(sp.props.cave, X - 12, Y - 12); }
+      else if (o.type === 'forge') { shadow(X + 32, Y + 2 * T - 4, 20); ctx.drawImage(sp.props.forge, X, Y + 2); }
       else if (o.type === 'bed') ctx.drawImage(sp.props.bed, X + 2, Y - 10);
       else if (o.type === 'table') ctx.drawImage(sp.props.table, X + 2, Y + 4);
       else if (o.type === 'site') {

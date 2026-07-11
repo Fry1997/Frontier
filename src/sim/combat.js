@@ -6,11 +6,21 @@
 // actions, never solos).
 
 import { ENEMIES } from '../content/enemies.js';
+import { ITEMS } from '../content/items.js';
 import * as companion from './companion.js';
+import * as progression from './progression.js';
 
 const T = 32;
-export const MAX_HP = 6;
 const WARD_CHANCE = 0.35;
+
+// Max hearts grow with the path (warden node).
+export function maxHp(state) {
+  return 6 + (progression.has(state, 'warden') ? 2 : 0);
+}
+
+function wardChance(state) {
+  return WARD_CHANCE + (progression.has(state, 'mystic') ? 0.2 : 0);
+}
 
 export function update(rt, dt) {
   if (!rt.venture) return;
@@ -56,7 +66,7 @@ export function update(rt, dt) {
 function bite(rt, e, def) {
   const { state, bus } = rt;
   // Merlin's ward: at friend bond he travels with you in spirit if not in step
-  if (companion.bond(state).tier === 'friend' && rt.rng.chance(WARD_CHANCE)) {
+  if (companion.bond(state).tier === 'friend' && rt.rng.chance(wardChance(state))) {
     bus.emit('combat:warded', { x: state.player.x, y: state.player.y });
     return;
   }
@@ -84,7 +94,7 @@ export function attackTarget(rt, px, py) {
 export function strike(rt, e) {
   const { state, bus } = rt;
   const def = ENEMIES[e.def];
-  e.hp -= 1;
+  e.hp -= ITEMS[state.player.equipped.weapon]?.damage || 1;
   e.hurtT = 0.25;
   bus.emit('enemy:hit', { x: e.x, y: e.y });
   // knockback
@@ -104,6 +114,6 @@ export function strike(rt, e) {
 // Sleeping heals: a night in your own bed mends a heart or two.
 export function attach(rt) {
   rt.bus.on('player:slept', () => {
-    rt.state.player.hp = Math.min(MAX_HP, rt.state.player.hp + 2);
+    rt.state.player.hp = Math.min(maxHp(rt.state), rt.state.player.hp + 2);
   });
 }

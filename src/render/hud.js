@@ -4,6 +4,7 @@
 import * as timeSys from '../world/time.js';
 import * as needsSys from '../sim/needs.js';
 import * as inv from '../sim/inventory.js';
+import * as combat from '../sim/combat.js';
 
 export function createHud(rt) {
   let stageFlash = 0;
@@ -50,8 +51,9 @@ export function createHud(rt) {
     let hudY = cyy + 30;
 
     // hearts (venture layer) — shown when hurt or out in the wilds
-    if (state.player.hp < 6 || rt.session.venturing) {
-      for (let i = 0; i < 6; i++) {
+    const hpMax = combat.maxHp(state);
+    if (state.player.hp < hpMax || rt.session.venturing) {
+      for (let i = 0; i < hpMax; i++) {
         ctx.globalAlpha = i < state.player.hp ? 1 : 0.22;
         ctx.drawImage(sp.icons.heart, 5 + i * 15, hudY - 4);
       }

@@ -9,6 +9,7 @@
 import { CROPS, cropForSeed } from '../content/crops.js';
 import { okey } from '../core/state.js';
 import * as inv from './inventory.js';
+import * as progression from './progression.js';
 
 const T = 32;
 
@@ -72,7 +73,8 @@ export function harvest(rt, plot) {
   const { state, bus, rng } = rt;
   if (!isGrown(plot)) return;
   const crop = CROPS[plot.cropId];
-  inv.add(state, crop.yield.itemId, crop.yield.qty, bus, { x: plot.tx * T + 16, y: plot.ty * T + 8 });
+  const qty = crop.yield.qty + (progression.has(state, 'harvester') ? 1 : 0);
+  inv.add(state, crop.yield.itemId, qty, bus, { x: plot.tx * T + 16, y: plot.ty * T + 8 });
   if (rng.chance(crop.bonusSeedChance)) inv.add(state, crop.seedItem, 1, bus);
   plot.cropId = null;
   plot.stage = 0;

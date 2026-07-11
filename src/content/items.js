@@ -19,5 +19,9 @@ export const ITEMS = {
   // Phase 8: venture layer
   sword:      { id: 'sword',      name: 'STONE SWORD',  label: 'SWORD',    icon: 'sword',      sprite: 'sword',      stackMax: 1,  kind: 'weapon', tags: ['weapon'],       value: 8, weapon: 'sword', damage: 1 },
   fur:        { id: 'fur',        name: 'WOLF PELT',    label: 'PELT',     icon: 'fur',        sprite: 'fur',        stackMax: 99, kind: 'material', tags: ['pelt'],       value: 5 },
+
+  // Phase 9: the dragon
+  dragonfire: { id: 'dragonfire', name: 'DRAGON-FIRE',  label: 'D.FIRE',   icon: 'dragonfire', sprite: 'dragonfire', stackMax: 9,  kind: 'arcane', tags: ['arcane'],       value: 20 },
+  flameSword: { id: 'flameSword', name: 'FLAME-FORGED SWORD', label: 'F.SWORD', icon: 'flameSword', sprite: 'flameSword', stackMax: 1, kind: 'weapon', tags: ['weapon'], value: 40, weapon: 'sword', damage: 2 },
   pumpkin:    { id: 'pumpkin',    name: 'PUMPKIN',      label: 'PUMPKIN',  icon: 'pumpkin',    sprite: 'pumpkin',    stackMax: 99, kind: 'food', tags: ['crop', 'food'],   value: 14, restores: { hunger: 0.35 } },
 };
