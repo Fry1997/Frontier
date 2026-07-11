@@ -7,6 +7,23 @@ import { okey } from '../core/state.js';
 
 const T = 32;
 
+// One-time bus wiring (called at boot; reads rt.state at event time).
+export function attach(rt) {
+  rt.bus.on('craft:effect', ({ effect }) => {
+    if (effect === 'upgradeShelter') upgradeShelter(rt);
+  });
+}
+
+// Tier upgrade-in-place (design fork resolved: the home levels up where it
+// stands — Structure.tier drives visuals and, later, room/furniture caps).
+export function upgradeShelter(rt) {
+  const { state, bus } = rt;
+  const sh = state.structures.find(s => s.type === 'shelter' && s.tier < 2);
+  if (!sh) return;
+  sh.tier = 2;
+  bus.emit('structure:upgraded', { id: sh.id, tier: sh.tier, ax: sh.ax, ay: sh.ay });
+}
+
 export function update(rt, dt) {
   const { state, bus } = rt;
   for (const key of Object.keys(state.world.objects)) {
@@ -43,7 +60,11 @@ function buildShelter(rt, siteKey, site) {
   }
 
   const id = 'shelter-' + (state.structures.length + 1);
-  state.structures.push({ id, type: 'shelter', ax, ay, tier: 1, rooms: [], furniture: [], ownerId: 'player' });
+  state.structures.push({
+    id, type: 'shelter', ax, ay, tier: 1,
+    rooms: [{ x: ax + 1, y: ay + 1, w: 3, h: 2 }], // interior bounds — furniture placement checks these
+    furniture: [], ownerId: 'player',
+  });
   state.flags.shelterBuilt = true;
 
   // Eject the player if a wall appeared under their feet.
@@ -53,6 +74,15 @@ function buildShelter(rt, siteKey, site) {
   const inRoom = ptx >= ax + 1 && ptx <= ax + 3 && pty >= ay + 1 && pty <= ay + 2;
   const inDoor = ptx === ax + 2 && pty === ay + 3;
   if (inFoot && !inRoom && !inDoor) { p.x = (ax + 2) * T + 16; p.y = (ay + 3) * T + 20; }
+  // The center tile can be clear while the feet box still overlaps a new
+  // wall (standing flush against the footprint) — nudge free, or fall back
+  // to the doorway.
+  if (tiles.blockedPx(p.x, p.y)) {
+    const nudges = [[0, -8], [0, -16], [8, 0], [-8, 0], [0, 8], [16, 0], [-16, 0], [0, 16]];
+    const spot = nudges.find(([dx, dy]) => !tiles.blockedPx(p.x + dx, p.y + dy));
+    if (spot) { p.x += spot[0]; p.y += spot[1]; }
+    else { p.x = (ax + 2) * T + 16; p.y = (ay + 3) * T + 20; }
+  }
 
   bus.emit('structure:built', { id, type: 'shelter', ax, ay });
   bus.emit('ui:update', {});

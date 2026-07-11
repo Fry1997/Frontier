@@ -16,6 +16,7 @@ import * as crafting from './sim/crafting.js';
 import * as building from './sim/building.js';
 import * as needs from './sim/needs.js';
 import { createQuests } from './sim/quests.js';
+import * as inventory from './sim/inventory.js';
 import * as saveio from './io/save.js';
 import { createInput } from './io/input.js';
 import { createRenderer } from './render/render.js';
@@ -63,6 +64,7 @@ const rt = {
 rt.input = createInput({ bus, els: ui.els, isActive: () => rt.session?.phase === 'game' });
 rt.fx = createFx(rt);
 rt.hud = createHud(rt);
+building.attach(rt); // bus-wired effects (e.g. the tier upgrade)
 const renderer = createRenderer(rt);
 
 function freshSession() {
@@ -70,6 +72,7 @@ function freshSession() {
     phase: 'title',
     gt: 0,
     craftOpen: false,
+    chestOpen: null, // containerId while a chest panel is open
     placing: null,
     player: { animT: 0, actT: 0, cookT: 0, moving: false, swingCb: null },
   };
@@ -150,6 +153,18 @@ ui.wire(rt, {
   },
   onCraft(id) { crafting.craftItem(rt, id); },
   onCancelPlace() { crafting.cancelPlace(rt); },
+  onChestMove(itemId, toContainer) {
+    if (!rt.session.chestOpen) return;
+    if (inventory.transfer(rt.state, rt.session.chestOpen, itemId, toContainer)) {
+      bus.emit('ui:click', {});
+      bus.emit('ui:update', {});
+    }
+  },
+  onChestClose() {
+    rt.session.chestOpen = null;
+    bus.emit('ui:click', {});
+    bus.emit('ui:update', {});
+  },
   onCyclePalette() {
     const ks = Object.keys(PALETTES);
     setPalette(ks[(ks.indexOf(rt.view.palKey) + 1) % ks.length]);
@@ -174,6 +189,7 @@ bus.on('input:craftToggle', () => {
 });
 bus.on('input:cancel', () => {
   if (rt.session.placing) crafting.cancelPlace(rt);
+  else if (rt.session.chestOpen) { rt.session.chestOpen = null; bus.emit('ui:update', {}); }
   else if (rt.session.craftOpen) { rt.session.craftOpen = false; bus.emit('ui:update', {}); }
 });
 bus.on('input:palette', () => {

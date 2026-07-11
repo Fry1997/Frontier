@@ -69,6 +69,8 @@ export function attachAudio(bus, sfx) {
   on('craft:crafted',    () => sfx.craft());
   on('object:placed',    () => sfx.place());
   on('structure:built',  () => { sfx.place(); sfx.craft(); });
+  on('structure:upgraded', () => { sfx.place(); sfx.home(); });
+  on('player:slept',     () => sfx.quest());
   on('player:ate',       () => sfx.eat());
   on('player:drank',     () => sfx.drink());
   on('rabbit:killed',    () => { sfx.squeak(); sfx.poof(); });

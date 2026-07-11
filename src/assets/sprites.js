@@ -395,6 +395,76 @@ function pShelterFrame(p) {
   return outline(c, p.outline);
 }
 
+/* ---------- furniture (Phase 3) ---------- */
+function pChest(p) {
+  const c = mk(26, 22, ({ R, P }) => {
+    R(2, 8, 22, 12, p.woodLog);
+    R(2, 8, 22, 2, p.woodRing);
+    R(2, 4, 22, 5, p.trunk);
+    R(3, 3, 20, 2, p.woodRing);
+    R(2, 12, 22, 1, p.trunkLo);        // lid seam
+    R(11, 10, 4, 5, p.stoneI);         // clasp
+    R(12, 11, 2, 2, p.outline);
+    R(4, 8, 2, 12, p.trunkLo); R(20, 8, 2, 12, p.trunkLo); // bands
+    P(3, 5, 'rgba(255,255,255,0.12)'); P(21, 5, p.trunkLo);
+  });
+  return outline(c, p.outline);
+}
+function pBed(p) {
+  const c = mk(28, 42, ({ R, P }) => {
+    R(2, 2, 24, 6, p.trunk);           // headboard
+    R(2, 2, 24, 2, p.woodRing);
+    R(4, 7, 20, 7, p.foam);            // pillow
+    R(5, 8, 18, 3, '#ffffff');
+    R(3, 13, 22, 24, p.tunic);         // blanket
+    R(3, 13, 22, 3, p.tunicLo);
+    for (let y = 18; y < 36; y += 5) R(3, y, 22, 1, p.tunicLo);
+    R(3, 35, 22, 4, p.trunk);          // footboard
+    R(3, 35, 22, 1, p.woodRing);
+    P(6, 16, p.sleeve); P(20, 22, p.sleeve); P(10, 28, p.sleeve);
+  });
+  return outline(c, p.outline);
+}
+function pTable(p) {
+  const c = mk(28, 26, ({ R, P }) => {
+    R(2, 6, 24, 10, p.woodLog);
+    R(2, 6, 24, 2, p.woodRing);
+    R(2, 14, 24, 2, p.trunkLo);
+    R(4, 16, 3, 8, p.trunk); R(21, 16, 3, 8, p.trunk);
+    P(5, 23, p.trunkLo); P(22, 23, p.trunkLo);
+    P(8, 9, p.trunkLo); P(17, 11, p.trunkLo); P(13, 8, p.woodRing);
+  });
+  return outline(c, p.outline);
+}
+// Tier-2 roof: timber shingles over the same footprint (structure upgrades
+// in place — the roof is the tell).
+function pRoofT2(p) {
+  const c = mk(172, 116, ({ R, P }) => {
+    const rnd = rng(67);
+    R(130, 0, 22, 22, p.stoneI);
+    R(128, 0, 26, 4, p.stoneIHi);
+    R(135, 2, 12, 2, p.outline);
+    speck(P, rnd, 130, 4, 22, 18, p.rockLo, 10);
+    R(4, 14, 164, 98, p.trunk);
+    R(0, 18, 172, 90, p.trunk);
+    R(0, 18, 172, 8, p.woodRing);
+    R(0, 18, 172, 2, p.stoneIHi);
+    R(4, 14, 164, 4, p.woodRing);
+    for (let y = 30; y < 108; y += 8) {
+      R(0, y, 172, 2, p.trunkLo);
+      for (let x = ((y / 8) % 2) * 5; x < 172; x += 10) { R(x, y - 5, 1, 5, p.trunkLo); }
+    }
+    speck(P, rnd, 4, 26, 164, 78, p.woodRing, 34);
+    speck(P, rnd, 4, 26, 164, 78, p.trunkLo, 26);
+    dith(P, 0, 18, 5, 90, p.trunkLo);
+    dith(P, 167, 18, 5, 90, p.trunkLo, 1);
+    R(0, 104, 172, 4, p.trunkLo);
+    for (let x = 0; x < 172; x += 3) { P(x, 108, p.trunkLo); if (x % 6 === 0) P(x + 1, 109, p.trunkLo); }
+    R(0, 106, 172, 1, p.woodRing);
+  });
+  return outline(c, p.outline);
+}
+
 /* ---------- Arthur ---------- */
 function headFront(R, P, p, hy, hair) {
   // base face
@@ -631,6 +701,10 @@ function icon(p, kind) {
     if (kind === 'hammer') { R(7, 6, 2, 8, p.trunk); R(4, 2, 8, 4, p.stoneI); R(4, 2, 8, 1, p.stoneIHi); }
     if (kind === 'fire') { R(6, 8, 5, 5, p.fire1); R(7, 6, 3, 5, p.fire2); P(8, 9, p.fire3); P(8, 10, p.fire3); P(5, 12, p.trunk); R(4, 13, 9, 2, p.trunk); }
     if (kind === 'home') { R(4, 8, 9, 6, p.frame); for (let i = 0; i < 5; i++) R(8 - i, 3 + i, 2 + i * 2, 1, p.thatch); R(7, 10, 3, 4, p.outline); }
+    if (kind === 'chest') { R(3, 7, 10, 6, p.woodLog); R(3, 4, 10, 4, p.trunk); R(3, 4, 10, 1, p.woodRing); R(7, 8, 2, 3, p.stoneI); R(4, 7, 1, 6, p.trunkLo); R(11, 7, 1, 6, p.trunkLo); }
+    if (kind === 'wall') { R(3, 4, 10, 10, p.trunk); R(3, 4, 10, 2, p.woodRing); for (const y of [8, 11] ) R(3, y, 10, 1, p.trunkLo); }
+    if (kind === 'bed') { R(3, 3, 10, 3, p.trunk); R(4, 6, 8, 3, p.foam); R(3, 9, 10, 5, p.tunic); R(3, 9, 10, 1, p.tunicLo); }
+    if (kind === 'table') { R(2, 6, 12, 4, p.woodLog); R(2, 6, 12, 1, p.woodRing); R(3, 10, 2, 4, p.trunk); R(11, 10, 2, 4, p.trunk); }
     if (kind === 'sun') {
       R(6, 6, 5, 5, p.fire3); R(7, 5, 3, 1, p.fire3); R(7, 11, 3, 1, p.fire3);
       P(5, 6, p.fire3); P(11, 6, p.fire3); P(5, 10, p.fire3); P(11, 10, p.fire3);
@@ -669,7 +743,7 @@ export function buildSprites(p, hair = 'scruff') {
   };
   rab.sitL = rab.sit.map(mirror); rab.hopL = rab.hop.map(mirror);
   const icons = {};
-  for (const k of ['stick', 'stone', 'wood', 'axe', 'meatRaw', 'meatCk', 'hunger', 'thirst', 'hammer', 'fire', 'home', 'sun', 'moon']) icons[k] = icon(p, k);
+  for (const k of ['stick', 'stone', 'wood', 'axe', 'meatRaw', 'meatCk', 'hunger', 'thirst', 'hammer', 'fire', 'home', 'sun', 'moon', 'chest', 'wall', 'bed', 'table']) icons[k] = icon(p, k);
   return {
     tiles: {
       grass: [tGrass(p, 1), tGrass(p, 2), tGrass(p, 5)],
@@ -682,7 +756,8 @@ export function buildSprites(p, hair = 'scruff') {
       meatRaw: pMeat(p, false), meatCk: pMeat(p, true),
       fireUnlit: pCampfire(p, -1), fire: [pCampfire(p, 0), pCampfire(p, 1), pCampfire(p, 2)],
       shelterFrame: pShelterFrame(p),
-      roof: pRoof(p), wallFace: wWallFace(p), wallW: wWallSide(p, false), wallE: wWallSide(p, true), door: wDoor(p),
+      roof: pRoof(p), roofT2: pRoofT2(p), wallFace: wWallFace(p), wallW: wWallSide(p, false), wallE: wWallSide(p, true), door: wDoor(p),
+      chest: pChest(p), bed: pBed(p), table: pTable(p),
     },
     arthur, rabbit: rab, icons,
   };

@@ -51,6 +51,17 @@ export function isDaytime(state) {
   return t >= 360 && t < 1140;
 }
 
+// Sleep in a bed: skip forward to next morning. Runs through the same
+// day-rollover path as the live clock so season/year and the dayStart
+// event (autosave, regrowth day counters) stay consistent.
+export function sleep(state, bus) {
+  state.time.minute = 8 * 60;
+  state.time.day += 1;
+  recomputeSeason(state);
+  bus.emit('time:dayStart', { day: state.time.day, season: state.time.season, year: state.time.year, slept: true });
+  bus.emit('player:slept', {});
+}
+
 export function clockLabel(state) {
   const t = state.time.minute;
   const hh = String(Math.floor(t / 60)).padStart(2, '0');

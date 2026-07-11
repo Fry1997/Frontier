@@ -122,7 +122,7 @@ export function createRenderer(rt) {
       const a = rf ? rf.roofA : 1;
       if (a < 0.02) continue;
       ctx.globalAlpha = a;
-      ctx.drawImage(sp.props.roof, sh.ax * T - 6, sh.ay * T - 24);
+      ctx.drawImage(sh.tier >= 2 ? sp.props.roofT2 : sp.props.roof, sh.ax * T - 6, sh.ay * T - 24);
       ctx.globalAlpha = 1;
     }
 
@@ -211,6 +211,9 @@ export function createRenderer(rt) {
         if (o.e) ctx.drawImage(sp.props.wallE, X + 24, Y - 14);
       }
       else if (o.type === 'door') ctx.drawImage(sp.props.door, X, Y - 14);
+      else if (o.type === 'chest') { shadow(X + 16, Y + T - 4, 10); ctx.drawImage(sp.props.chest, X + 3, Y + 8); }
+      else if (o.type === 'bed') ctx.drawImage(sp.props.bed, X + 2, Y - 10);
+      else if (o.type === 'table') ctx.drawImage(sp.props.table, X + 2, Y + 4);
       else if (o.type === 'site') {
         const st = o.t / 1.8;
         ctx.drawImage(sp.props.shelterFrame, o.ax * T + 22, o.ay * T + 14, 116, 100);

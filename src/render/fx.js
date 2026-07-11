@@ -85,6 +85,15 @@ export function createFx(rt) {
     const p = pal();
     burst(ax * T + 80, ay * T + 30, [p.thatch, p.thatchLo, p.woodRing], 18, { up: 45, life: 0.9 });
   });
+  bus.on('structure:upgraded', ({ ax, ay }) => {
+    const p = pal();
+    burst(ax * T + 80, ay * T + 30, [p.woodRing, p.trunk, p.stoneIHi], 20, { up: 50, life: 1 });
+    float('TIMBER HOME!', ax * T + 80, ay * T - 10, p.ui.accent);
+  });
+  bus.on('player:slept', () => {
+    const p = rt.state.player;
+    burst(p.x, p.y - 40, [pal().ui.accent], 6, { up: 25, grav: -10, sz: 1, life: 0.8 });
+  });
   bus.on('quest:finale', () => {
     finaleT = 9;
     const p = rt.state.player;

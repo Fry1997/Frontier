@@ -10,7 +10,18 @@ npx serve .        # or: python3 -m http.server
 
 Move with WASD / left-thumb joystick, act with **E** / the action button, craft with **C**.
 
-## Status — Phase 2 complete (Bigger world + content-data layer)
+## Status — Phase 3 complete (Building depth)
+
+New in Phase 3:
+
+- **Storage** — craftable chests own a container (`inventory.containers`); facing one offers OPEN and a two-column transfer panel (pack ↔ stored). Contents persist in the save.
+- **Furniture + rooms** — shelters now record their interior room bounds; beds and tables place only on floor tiles inside a room and are recorded on the structure (`Structure.furniture`). Facing the bed offers **SLEEP** — skips to next morning through the real day-rollover path (autosave, season, regrowth all consistent).
+- **Walls** — craftable freestanding wall segments for fencing land.
+- **Tier upgrade** — the *upgrade-in-place vs. separate castle* fork is resolved as upgrade-in-place: the TIMBER HOME recipe raises `Structure.tier` to 2 and swaps in a shingled roof. Craft recipes can gate on flags (`requiresFlag`) and carry effects handled over the bus.
+- **Save v2** — first real migration: v1 saves get room bounds backfilled onto existing shelters.
+- **Fixed a wedge bug family** (found by a verification probe): placement validity, shelter wall construction, and tree regrowth all used the player's *center tile*; the feet collision box could overlap a newly-created blocking object and trap the player. All three now test feet-box overlap, and shelter construction nudges the player free if needed.
+
+## Phase 2 (Bigger world + content-data layer)
 
 New in Phase 2:
 

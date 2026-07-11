@@ -4,7 +4,7 @@
 // main.js. Re-renders on 'ui:update'.
 
 import { PALETTES, HAIRS, makePortrait, makeThumb } from '../assets/sprites.js';
-import { RECIPES } from '../content/recipes.js';
+import { ITEMS } from '../content/items.js';
 import * as crafting from '../sim/crafting.js';
 import * as inv from '../sim/inventory.js';
 import * as player from '../entities/player.js';
@@ -46,6 +46,9 @@ export function createUI(wrap) {
 
   const craftPanel = el('div', 'craft-panel hidden');
   wrap.appendChild(craftPanel);
+
+  const chestPanel = el('div', 'craft-panel chest-panel hidden');
+  wrap.appendChild(chestPanel);
 
   const homeBanner = el('div', 'home-banner hidden', `
     <div class="home-title">HOME.</div>
@@ -157,6 +160,34 @@ export function createUI(wrap) {
     }
   }
 
+  // --- chest panel: two columns, tap a stack to move it across ---
+  function renderChest() {
+    const { state, session } = rt;
+    const sp = rt.view.sprites;
+    const box = state.inventory.containers[session.chestOpen] || [];
+    chestPanel.innerHTML = `
+      <div class="cp-head"><span>CHEST</span><button class="cp-close">X</button></div>
+      <div class="ch-cols">
+        <div class="ch-col"><div class="ch-title">YOUR PACK</div><div class="ch-list" data-side="pack"></div></div>
+        <div class="ch-col"><div class="ch-title">STORED</div><div class="ch-list" data-side="chest"></div></div>
+      </div>
+      <div class="ch-hint">TAP A STACK TO MOVE IT</div>`;
+    chestPanel.querySelector('.cp-close').addEventListener('pointerdown', () => H.onChestClose());
+    const fill = (side, list) => {
+      const host = chestPanel.querySelector(`[data-side=${side}]`);
+      if (!list.length) host.appendChild(el('div', 'ch-empty', side === 'pack' ? 'NOTHING TO STOW' : 'EMPTY'));
+      for (const s of list) {
+        const item = ITEMS[s.itemId];
+        const row = el('button', 'ch-item');
+        row.innerHTML = `<img src="${sp.icons[item.icon].toDataURL()}" width="16" height="16"><span>${item.label}</span><b>${s.qty}</b>`;
+        row.addEventListener('pointerdown', () => H.onChestMove(s.itemId, side === 'pack'));
+        host.appendChild(row);
+      }
+    };
+    fill('pack', state.inventory.slots);
+    fill('chest', box);
+  }
+
   // --- reactive update (visibility + craft panel) ---
   function update() {
     if (!rt) return;
@@ -166,6 +197,8 @@ export function createUI(wrap) {
     controls.classList.toggle('hidden', !inGame);
     craftPanel.classList.toggle('hidden', !inGame || !session.craftOpen);
     if (inGame && session.craftOpen) renderCraft();
+    chestPanel.classList.toggle('hidden', !inGame || !session.chestOpen);
+    if (inGame && session.chestOpen) renderChest();
     cancelBtn.classList.toggle('hidden', !session.placing);
     craftBtn.classList.toggle('hidden', !!session.placing);
     if (state) {

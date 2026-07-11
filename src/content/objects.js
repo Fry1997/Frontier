@@ -14,6 +14,9 @@ export const OBJECT_DEFS = {
   site:    { id: 'site',    sprite: 'shelterFrame', passable: false, tags: ['construction'] },
   wall:    { id: 'wall',    sprite: 'wall',    passable: false, tags: ['structure'] },
   door:    { id: 'door',    sprite: 'door',    passable: true,  tags: ['structure'] },
+  chest:   { id: 'chest',   sprite: 'chest',   passable: false, tags: ['furniture', 'storage'] },
+  bed:     { id: 'bed',     sprite: 'bed',     passable: false, tags: ['furniture'] },
+  table:   { id: 'table',   sprite: 'table',   passable: false, tags: ['furniture'] },
 };
 
 export const isPassable = type => !!OBJECT_DEFS[type]?.passable;

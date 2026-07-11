@@ -76,7 +76,7 @@
     background: rgba(244,230,200,0.1); border: 2px solid rgba(244,230,200,0.4); color: #f7efdb;
     font-size: 9px; width: 34px; height: 34px; border-radius: 8px; cursor: pointer;
   }
-  .cp-list { display: flex; flex-direction: column; gap: 8px; }
+  .cp-list { display: flex; flex-direction: column; gap: 8px; max-height: min(46vh, 380px); overflow-y: auto; }
   .cp-row {
     display: flex; align-items: center; gap: 10px; background: rgba(244,230,200,0.06);
     border: 2px solid rgba(244,230,200,0.18); border-radius: 8px; padding: 8px 10px;
@@ -93,6 +93,22 @@
   }
   .cp-make.can { background: #e8a33d; color: #2b1c26; border-color: #f2e3c2; }
   .cp-make.done { background: rgba(143,208,106,0.18); color: #8fd06a; }
+
+  .chest-panel { width: min(380px, calc(100vw - 20px)); }
+  .ch-cols { display: flex; gap: 10px; }
+  .ch-col { flex: 1; min-width: 0; }
+  .ch-title { color: #e8a33d; font-size: 7px; letter-spacing: 1px; margin-bottom: 6px; }
+  .ch-list { display: flex; flex-direction: column; gap: 6px; max-height: min(40vh, 300px); overflow-y: auto; }
+  .ch-item {
+    display: flex; align-items: center; gap: 6px; width: 100%;
+    background: rgba(244,230,200,0.06); border: 2px solid rgba(244,230,200,0.18);
+    border-radius: 8px; padding: 8px; cursor: pointer; color: #f7efdb; font-size: 7px;
+  }
+  .ch-item img { image-rendering: pixelated; flex-shrink: 0; }
+  .ch-item span { flex: 1; text-align: left; }
+  .ch-item b { color: #e8a33d; }
+  .ch-empty { color: rgba(247,239,219,0.35); font-size: 6px; letter-spacing: 1px; padding: 8px 2px; }
+  .ch-hint { color: rgba(247,239,219,0.4); font-size: 6px; letter-spacing: 1px; text-align: center; margin-top: 10px; }
 
   .home-banner {
     position: absolute; left: 50%; top: 15%; transform: translateX(-50%);

@@ -43,3 +43,24 @@ export function spend(state, costs) {
 export function hasTool(state, tool) {
   return state.player.equipped.tool === tool;
 }
+
+// --- containers (chests) ---
+
+function moveStack(fromList, toList, itemId) {
+  const s = fromList.find(s => s.itemId === itemId);
+  if (!s) return false;
+  fromList.splice(fromList.indexOf(s), 1);
+  let t = toList.find(t => t.itemId === itemId);
+  if (!t) toList.push({ itemId, qty: s.qty });
+  else t.qty += s.qty;
+  return true;
+}
+
+// Move a whole stack between the player's pack and a container.
+export function transfer(state, containerId, itemId, toContainer) {
+  const box = state.inventory.containers[containerId];
+  if (!box) return false;
+  return toContainer
+    ? moveStack(state.inventory.slots, box, itemId)
+    : moveStack(box, state.inventory.slots, itemId);
+}

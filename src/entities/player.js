@@ -9,6 +9,7 @@ import { OBJECT_DEFS } from '../content/objects.js';
 import * as inv from '../sim/inventory.js';
 import * as needs from '../sim/needs.js';
 import * as crafting from '../sim/crafting.js';
+import * as timeSys from '../world/time.js';
 
 const T = 32;
 const DIRV = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };
@@ -53,6 +54,8 @@ export function actionCtx(rt) {
     return inv.hasTool(state, 'axe') ? { k: 'chop', label: 'CHOP', o, fx, fy } : { k: 'noaxe', label: 'NEED AXE' };
   }
   if (o && o.type === 'fire' && inv.count(state, 'meatRaw') > 0) return { k: 'cook', label: 'COOK' };
+  if (o && o.type === 'chest') return { k: 'chest', label: 'OPEN', containerId: o.containerId };
+  if (o && o.type === 'bed') return { k: 'sleep', label: 'SLEEP' };
   if (rt.tiles.tileAt(fx, fy) === 'w' && state.player.needs.thirst < 0.98) return { k: 'drink', label: 'DRINK', fx, fy };
   if (inv.count(state, 'meatCk') > 0 && state.player.needs.hunger < 0.98 && state.flags.metersOn) return { k: 'eat', label: 'EAT' };
   if (inv.count(state, 'meatRaw') > 0 && nearFire(state)) return { k: 'cook', label: 'COOK' };
@@ -79,6 +82,18 @@ export function doAction(rt) {
   if (c.k === 'cook') {
     session.player.cookT = COOK_TIME;
     bus.emit('cook:start', {});
+    return;
+  }
+  if (c.k === 'chest') {
+    session.chestOpen = c.containerId;
+    session.craftOpen = false;
+    bus.emit('ui:click', {});
+    bus.emit('ui:update', {});
+    return;
+  }
+  if (c.k === 'sleep') {
+    timeSys.sleep(state, bus);
+    bus.emit('fx:float', { str: 'A NEW DAY', x: state.player.x, y: state.player.y - 56, kind: 'accent' });
     return;
   }
   if (c.k === 'eat') {

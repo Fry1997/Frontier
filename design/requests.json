@@ -1,0 +1,134 @@
+{
+  "_comment": "The request ledger (design↔code pipeline contract §1). One entry per outstanding asset. CODE keeps building against procedural placeholders under the same assetId; DESIGN fills these in whenever ready. Status lifecycle: requested → in_progress → delivered → accepted|rejected → integrated.",
+  "requests": [
+    {
+      "requestId": "REQ-0001",
+      "assetId": "player.arthur",
+      "status": "requested",
+      "type": "character_sheet",
+      "purpose": "Player character; replaces the procedural Arthur. Highest-value asset in the game — the eye judges the character hardest and procedural does it worst (handover §9).",
+      "spec": {
+        "frameSize": { "w": 32, "h": 48 },
+        "states": [
+          { "name": "idle", "frames": 1, "directions": ["down", "up", "left", "right"] },
+          { "name": "walk", "frames": 4, "directions": ["down", "up", "left", "right"] },
+          { "name": "act", "frames": 2, "directions": ["down", "up", "left", "right"] }
+        ],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "arthur.png + arthur.json atlas ({state}_{dir} -> frame rects)",
+      "integratesAt": "assets/sprites/player/",
+      "priority": "high",
+      "constraints": [
+        "match the ~32x48 footprint of the current procedural sprite (feet at bottom_center)",
+        "readable at 3x scale (game renders pixel-doubled+)",
+        "left may be delivered as mirrored right if the design has no asymmetric details — note it in deviations if so",
+        "act frames carry the tool swing: frame 0 = raised, frame 1 = struck (hit lands between them)"
+      ]
+    },
+    {
+      "requestId": "REQ-0002",
+      "assetId": "prop.chest",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "Storage chest (Phase 3). Placed in the world; opens a storage panel.",
+      "spec": {
+        "frameSize": { "w": 26, "h": 22 },
+        "states": [
+          { "name": "closed", "frames": 1, "directions": ["down"] },
+          { "name": "open", "frames": 1, "directions": ["down"] }
+        ],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "chest.png + chest.json atlas",
+      "integratesAt": "assets/sprites/props/",
+      "priority": "medium",
+      "constraints": ["wood + iron banding to match the medieval settlement tone", "open state unused today but wired the moment it lands"]
+    },
+    {
+      "requestId": "REQ-0003",
+      "assetId": "prop.bed",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "Bed furniture (Phase 3). Sits on interior floor tiles; the sleep interaction points at it.",
+      "spec": {
+        "frameSize": { "w": 28, "h": 42 },
+        "states": [{ "name": "default", "frames": 1, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "bed.png",
+      "integratesAt": "assets/sprites/props/",
+      "priority": "medium",
+      "constraints": ["vertical orientation (headboard at top), reads inside a 3x2-tile room"]
+    },
+    {
+      "requestId": "REQ-0004",
+      "assetId": "prop.table",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "Table furniture (Phase 3). Interior decoration; later a crafting/eating surface.",
+      "spec": {
+        "frameSize": { "w": 28, "h": 26 },
+        "states": [{ "name": "default", "frames": 1, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "table.png",
+      "integratesAt": "assets/sprites/props/",
+      "priority": "low",
+      "constraints": ["leave the tabletop visually clear so items can be composited on it later"]
+    },
+    {
+      "requestId": "REQ-0005",
+      "assetId": "structure.roof_t2",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "Tier-2 (TIMBER HOME) roof — the visual payoff of the upgrade-in-place. Drawn over the same 5x4-tile footprint as the tier-1 thatch roof.",
+      "spec": {
+        "frameSize": { "w": 172, "h": 116 },
+        "states": [{ "name": "default", "frames": 1, "directions": ["down"] }],
+        "anchor": "top_left",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "roof_t2.png",
+      "integratesAt": "assets/sprites/structures/",
+      "priority": "medium",
+      "constraints": [
+        "same silhouette/footprint as the tier-1 roof (172x116, chimney top-right at ~x130-152) so the swap is drop-in",
+        "timber shingles, visibly richer than tier-1 thatch — the upgrade must read at a glance"
+      ]
+    },
+    {
+      "requestId": "REQ-0006",
+      "assetId": "prop.wall_segment",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "Freestanding crafted wall/fence segment (Phase 3). Current placeholder reuses the house wall face and reads too heavy.",
+      "spec": {
+        "frameSize": { "w": 32, "h": 46 },
+        "states": [{ "name": "default", "frames": 1, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "wall_segment.png",
+      "integratesAt": "assets/sprites/props/",
+      "priority": "low",
+      "constraints": ["should tile side-by-side seamlessly when placed in a row", "lighter than the house walls — a palisade/fence feel"]
+    }
+  ]
+}

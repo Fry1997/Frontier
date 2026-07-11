@@ -67,9 +67,11 @@ export function createResources(rt) {
     }
   }
 
+  // Feet-box overlap, not center-tile equality — a tree closing around a
+  // toe wedges the player just as badly as one on their center.
   function occupied(tx, ty) {
     const p = rt.state.player;
-    return Math.floor(p.x / T) === tx && Math.floor(p.y / T) === ty;
+    return !(p.x + 7 < tx * T || p.x - 7 >= (tx + 1) * T || p.y + 5 < ty * T || p.y - 4 >= (ty + 1) * T);
   }
 
   function trySpawn(kind) {

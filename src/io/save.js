@@ -17,9 +17,21 @@ const SETTINGS_KEY = 'frontier.settings';
 const AUTOSAVE_EVERY = 30; // seconds
 
 // migrations[n] upgrades a version-n save to version n+1.
-// Example for a future bump:
-//   1: save => { save.player.mana = 1; save.version = 2; return save; }
-const migrations = {};
+const migrations = {
+  // v1 → v2 (Phase 3): structures gained room bounds; furniture placement
+  // validates against them, so older shelters get theirs backfilled.
+  1: save => {
+    for (const sh of save.structures || []) {
+      if (sh.type === 'shelter' && !(sh.rooms || []).length) {
+        sh.rooms = [{ x: sh.ax + 1, y: sh.ay + 1, w: 3, h: 2 }];
+      }
+      sh.furniture ||= [];
+    }
+    save.inventory.containers ||= {};
+    save.version = 2;
+    return save;
+  },
+};
 
 export function migrate(save) {
   while (save.version < SAVE_VERSION) {
