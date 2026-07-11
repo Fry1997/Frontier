@@ -6,6 +6,7 @@
 import { PALETTES, HAIRS, makePortrait, makeThumb } from '../assets/sprites.js';
 import { ITEMS } from '../content/items.js';
 import * as crafting from '../sim/crafting.js';
+import * as economy from '../sim/economy.js';
 import * as inv from '../sim/inventory.js';
 import * as player from '../entities/player.js';
 
@@ -49,6 +50,9 @@ export function createUI(wrap) {
 
   const chestPanel = el('div', 'craft-panel chest-panel hidden');
   wrap.appendChild(chestPanel);
+
+  const shopPanel = el('div', 'craft-panel chest-panel hidden');
+  wrap.appendChild(shopPanel);
 
   const homeBanner = el('div', 'home-banner hidden', `
     <div class="home-title">HOME.</div>
@@ -188,6 +192,41 @@ export function createUI(wrap) {
     fill('chest', box);
   }
 
+  // --- shop panel: buy column (stock) / sell column (matching pack items) ---
+  function renderShop() {
+    const { state, session } = rt;
+    const sp = rt.view.sprites;
+    const shop = economy.getShop(session.shopOpen);
+    if (!shop) return;
+    shopPanel.innerHTML = `
+      <div class="cp-head"><span>${shop.name} &nbsp;·&nbsp; <img src="${sp.icons.coin.toDataURL()}" width="12" height="12" style="image-rendering:pixelated;vertical-align:-2px"> ${state.economy.currency}</span><button class="cp-close">X</button></div>
+      <div class="ch-cols">
+        <div class="ch-col"><div class="ch-title">BUY</div><div class="ch-list" data-side="buy"></div></div>
+        <div class="ch-col"><div class="ch-title">SELL</div><div class="ch-list" data-side="sell"></div></div>
+      </div>
+      <div class="ch-hint">TAP TO TRADE ONE</div>`;
+    shopPanel.querySelector('.cp-close').addEventListener('pointerdown', () => H.onShopClose());
+    const buyHost = shopPanel.querySelector('[data-side=buy]');
+    for (const line of shop.stock) {
+      const item = ITEMS[line.itemId];
+      const can = state.economy.currency >= line.price;
+      const row = el('button', 'ch-item' + (can ? '' : ' dim'));
+      row.innerHTML = `<img src="${sp.icons[item.icon].toDataURL()}" width="16" height="16"><span>${item.label}</span><b>${line.price}c</b>`;
+      row.addEventListener('pointerdown', () => H.onShopBuy(line.itemId));
+      buyHost.appendChild(row);
+    }
+    const sellHost = shopPanel.querySelector('[data-side=sell]');
+    const goods = economy.sellables(state, shop);
+    if (!goods.length) sellHost.appendChild(el('div', 'ch-empty', 'NOTHING THEY WANT'));
+    for (const s of goods) {
+      const item = ITEMS[s.itemId];
+      const row = el('button', 'ch-item');
+      row.innerHTML = `<img src="${sp.icons[item.icon].toDataURL()}" width="16" height="16"><span>${item.label} ×${s.qty}</span><b>+${item.value}c</b>`;
+      row.addEventListener('pointerdown', () => H.onShopSell(s.itemId));
+      sellHost.appendChild(row);
+    }
+  }
+
   // --- reactive update (visibility + craft panel) ---
   function update() {
     if (!rt) return;
@@ -199,6 +238,8 @@ export function createUI(wrap) {
     if (inGame && session.craftOpen) renderCraft();
     chestPanel.classList.toggle('hidden', !inGame || !session.chestOpen);
     if (inGame && session.chestOpen) renderChest();
+    shopPanel.classList.toggle('hidden', !inGame || !session.shopOpen);
+    if (inGame && session.shopOpen) renderShop();
     cancelBtn.classList.toggle('hidden', !session.placing);
     craftBtn.classList.toggle('hidden', !!session.placing);
     if (state) {

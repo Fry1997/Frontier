@@ -67,6 +67,8 @@ export const MAPS = {
       { name: 'lake', rect: [1, 21, 14, 12] },
     ],
     resourceCaps: { stick: 8, stone: 6 },
+    // fixed set-pieces beyond the row chars (the trader's cart, Phase 4)
+    places: [{ type: 'stall', tx: 29, ty: 15 }],
   },
 
   // The original prototype map — kept so old saves keep working (§4:
@@ -143,6 +145,9 @@ export function initialWorldObjects(map) {
       if (ch === 's') drops.push({ kind: 'stick', x: x * T + 16, y: y * T + 20 });
       if (ch === 'o') drops.push({ kind: 'stone', x: x * T + 16, y: y * T + 20 });
     }
+  }
+  for (const pl of map.places || []) {
+    objects[pl.tx + ',' + pl.ty] = { type: pl.type };
   }
   return { objects, drops };
 }

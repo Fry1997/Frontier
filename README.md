@@ -10,7 +10,16 @@ npx serve .        # or: python3 -m http.server
 
 Move with WASD / left-thumb joystick, act with **E** / the action button, craft with **C**.
 
-## Status — Phase 3 complete (Building depth)
+## Status — Phase 4 complete (Farming + economy)
+
+New in Phase 4:
+
+- **Farming** — craft a stone hoe, **TILL** dirt tiles into plots (`state.farm`, schema `Plot`), **PLANT** seeds, **WATER** daily, **HARVEST** when grown. Growth ticks on day rollover only if the plot was watered; out-of-season crops **wither** (gently — CLEAR and replant). `crop:withered` is emitted on the bus, ready to become a Phase 6 event. Crops are content (`src/content/crops.js`): turnip (2 days) and pumpkin (4 days, summer/autumn only).
+- **Economy** — `economy.currency` plus the first shop: a **trader's cart** parked near the camp (`content/shops.js`; `npcId: null` until Phase 5 staffs it). TRADE opens a buy/sell panel — the cart sells seeds and cooked food, and buys crops, food, wood, and stone at each item's content value. Coin chip in the HUD.
+- **EAT generalized** — cooked meat first, then crops; food restores are item data.
+- **Save v3** — migration injects the trader's cart into older greenwood saves.
+
+## Phase 3 (Building depth)
 
 New in Phase 3:
 

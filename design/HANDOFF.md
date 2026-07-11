@@ -14,8 +14,11 @@ order; priority tells you where the value is.*
 | REQ-0002 | `prop.chest` | prop | medium | Storage chest (closed + open) |
 | REQ-0003 | `prop.bed` | prop | medium | Bed (interior furniture, sleep target) |
 | REQ-0005 | `structure.roof_t2` | prop | medium | Tier-2 "Timber Home" roof (upgrade payoff) |
+| REQ-0007 | `prop.stall` | prop | medium | The wandering trader's cart (first shop) |
 | REQ-0004 | `prop.table` | prop | low | Table (interior furniture) |
 | REQ-0006 | `prop.wall_segment` | prop | low | Freestanding fence/palisade segment |
+| REQ-0008 | `crops.turnip` | prop | low | Turnip growth stages (3 frames) |
+| REQ-0009 | `crops.pumpkin` | prop | low | Pumpkin growth stages (5 frames) |
 
 Full machine-readable specs: [`design/requests.json`](requests.json) — that
 file is the ledger; every field the contract requires (frame sizes, states,

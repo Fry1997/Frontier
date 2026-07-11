@@ -16,6 +16,15 @@ export const RECIPES = [
     equips: 'tool',
   },
   {
+    id: 'hoe',
+    name: 'STONE HOE',
+    desc: 'TILLS THE EARTH',
+    icon: 'hoe',
+    out: { itemId: 'hoe', qty: 1 },
+    costs: [{ itemId: 'stick', qty: 1 }, { itemId: 'stone', qty: 1 }],
+    once: true,
+  },
+  {
     id: 'fire',
     name: 'CAMPFIRE',
     desc: 'COOK + WARMTH',

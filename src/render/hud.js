@@ -32,7 +32,12 @@ export function createHud(rt) {
     ];
     if (inv.count(state, 'meatRaw') > 0) chips.push(['meatRaw', inv.count(state, 'meatRaw')]);
     if (inv.count(state, 'meatCk') > 0) chips.push(['meatCk', inv.count(state, 'meatCk')]);
+    for (const k of ['turnip', 'pumpkin', 'turnipSeed', 'pumpkinSeed']) {
+      if (inv.count(state, k) > 0) chips.push([k, inv.count(state, k)]);
+    }
+    if (state.economy.currency > 0) chips.push(['coin', state.economy.currency]);
     if (inv.hasTool(state, 'axe')) chips.push(['axe', -1]);
+    if (inv.has(state, 'hoe')) chips.push(['hoe', -1]);
     for (const [k, n] of chips) {
       const str = n === -1 ? '' : String(n);
       const tw = str.length * 8;

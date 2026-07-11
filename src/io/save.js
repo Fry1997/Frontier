@@ -31,6 +31,19 @@ const migrations = {
     save.version = 2;
     return save;
   },
+  // v2 → v3 (Phase 4): the trader's cart landed on greenwood as a fixed
+  // set-piece; older greenwood saves get it injected (unless something
+  // already occupies the tile).
+  2: save => {
+    if (save.world.baseMapId === 'greenwood' &&
+        !Object.values(save.world.objects).some(o => o.type === 'stall') &&
+        !save.world.objects['29,15']) {
+      save.world.objects['29,15'] = { type: 'stall' };
+    }
+    save.farm ||= [];
+    save.version = 3;
+    return save;
+  },
 };
 
 export function migrate(save) {

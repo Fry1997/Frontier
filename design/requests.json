@@ -112,6 +112,63 @@
       ]
     },
     {
+      "requestId": "REQ-0007",
+      "assetId": "prop.stall",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "The wandering trader's cart (Phase 4) — the first shop, parked near the camp. Becomes an NPC-owned stall in Phase 5.",
+      "spec": {
+        "frameSize": { "w": 64, "h": 58 },
+        "states": [{ "name": "default", "frames": 1, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "stall.png",
+      "integratesAt": "assets/sprites/props/",
+      "priority": "medium",
+      "constraints": ["wooden cart with a striped awning and visible goods on the counter — should read as 'trade here' at a glance"]
+    },
+    {
+      "requestId": "REQ-0008",
+      "assetId": "crops.turnip",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "Turnip crop growth stages (Phase 4), drawn over tilled soil.",
+      "spec": {
+        "frameSize": { "w": 24, "h": 26 },
+        "states": [{ "name": "stage", "frames": 3, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "crop_turnip.png + crop_turnip.json (frames stage_0..stage_2)",
+      "integratesAt": "assets/sprites/crops/",
+      "priority": "low",
+      "constraints": ["stage 0 = sprout, last stage must clearly read 'ready to pull'", "shares the 24x26 frame with all crops so the renderer stays generic"]
+    },
+    {
+      "requestId": "REQ-0009",
+      "assetId": "crops.pumpkin",
+      "status": "requested",
+      "type": "prop",
+      "purpose": "Pumpkin crop growth stages (Phase 4).",
+      "spec": {
+        "frameSize": { "w": 24, "h": 26 },
+        "states": [{ "name": "stage", "frames": 5, "directions": ["down"] }],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "crop_pumpkin.png + crop_pumpkin.json (frames stage_0..stage_4)",
+      "integratesAt": "assets/sprites/crops/",
+      "priority": "low",
+      "constraints": ["same 24x26 frame as other crops", "final stage is the harvestable orange pumpkin"]
+    },
+    {
       "requestId": "REQ-0006",
       "assetId": "prop.wall_segment",
       "status": "requested",

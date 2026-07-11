@@ -9,6 +9,7 @@ import { OBJECT_DEFS } from '../content/objects.js';
 import * as inv from '../sim/inventory.js';
 import * as needs from '../sim/needs.js';
 import * as crafting from '../sim/crafting.js';
+import * as farming from '../sim/farming.js';
 import * as timeSys from '../world/time.js';
 
 const T = 32;
@@ -23,6 +24,14 @@ export function faceTile(state) {
 export function facePoint(state) {
   const [dx, dy] = DIRV[state.player.dir];
   return [state.player.x + dx * 24, state.player.y + dy * 22];
+}
+
+// Best edible in the pack (cooked meat first, then crops).
+function findFood(state) {
+  for (const id of ['meatCk', 'turnip', 'pumpkin']) {
+    if (ITEMS[id].restores && inv.count(state, id) > 0) return id;
+  }
+  return null;
 }
 
 export function nearFire(state) {
@@ -56,8 +65,20 @@ export function actionCtx(rt) {
   if (o && o.type === 'fire' && inv.count(state, 'meatRaw') > 0) return { k: 'cook', label: 'COOK' };
   if (o && o.type === 'chest') return { k: 'chest', label: 'OPEN', containerId: o.containerId };
   if (o && o.type === 'bed') return { k: 'sleep', label: 'SLEEP' };
+  if (o && OBJECT_DEFS[o.type]?.shopId) return { k: 'shop', label: 'TRADE', shopId: OBJECT_DEFS[o.type].shopId };
+  // farming verbs on the faced tile
+  const plot = farming.plotAt(state, fx, fy);
+  if (plot) {
+    if (!plot.healthy) return { k: 'farmClear', label: 'CLEAR', plot };
+    if (farming.isGrown(plot)) return { k: 'farmHarvest', label: 'HARVEST', plot };
+    if (!plot.cropId && farming.seedInPack(state)) return { k: 'farmPlant', label: 'PLANT', plot };
+    if (plot.cropId && !plot.watered) return { k: 'farmWater', label: 'WATER', plot };
+  } else if (inv.has(state, 'hoe') && farming.canTill(rt, fx, fy)) {
+    return { k: 'farmTill', label: 'TILL', fx, fy };
+  }
   if (rt.tiles.tileAt(fx, fy) === 'w' && state.player.needs.thirst < 0.98) return { k: 'drink', label: 'DRINK', fx, fy };
-  if (inv.count(state, 'meatCk') > 0 && state.player.needs.hunger < 0.98 && state.flags.metersOn) return { k: 'eat', label: 'EAT' };
+  const food = findFood(state);
+  if (food && state.player.needs.hunger < 0.98 && state.flags.metersOn) return { k: 'eat', label: 'EAT', food };
   if (inv.count(state, 'meatRaw') > 0 && nearFire(state)) return { k: 'cook', label: 'COOK' };
   return { k: 'none', label: '...' };
 }
@@ -96,9 +117,21 @@ export function doAction(rt) {
     bus.emit('fx:float', { str: 'A NEW DAY', x: state.player.x, y: state.player.y - 56, kind: 'accent' });
     return;
   }
+  if (c.k === 'shop') {
+    session.shopOpen = c.shopId;
+    session.craftOpen = false;
+    bus.emit('ui:click', {});
+    bus.emit('ui:update', {});
+    return;
+  }
+  if (c.k === 'farmTill') { swing(session, () => farming.till(rt, c.fx, c.fy)); return; }
+  if (c.k === 'farmPlant') { farming.plant(rt, c.plot); return; }
+  if (c.k === 'farmWater') { farming.water(rt, c.plot); return; }
+  if (c.k === 'farmHarvest') { farming.harvest(rt, c.plot); return; }
+  if (c.k === 'farmClear') { farming.clear(rt, c.plot); return; }
   if (c.k === 'eat') {
-    inv.remove(state, 'meatCk', 1);
-    needs.eat(state, ITEMS.meatCk.restores.hunger);
+    inv.remove(state, c.food, 1);
+    needs.eat(state, ITEMS[c.food].restores.hunger);
     bus.emit('player:ate', { x: state.player.x, y: state.player.y });
     bus.emit('ui:update', {});
     return;

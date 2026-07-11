@@ -74,6 +74,12 @@ export function createRenderer(rt) {
       }
     }
 
+    // farm plots: tilled soil overlays (crops draw as y-sorted entities)
+    for (const plot of state.farm) {
+      if (plot.tx < x0 || plot.tx > x1 || plot.ty < y0 || plot.ty > y1) continue;
+      ctx.drawImage(plot.watered ? sp.props.soilWet : sp.props.soil, plot.tx * T, plot.ty * T);
+    }
+
     // placement highlight
     if (session.placing) {
       const [ax, ay] = crafting.placeAnchor(rt);
@@ -101,6 +107,10 @@ export function createRenderer(rt) {
       const [tx, ty] = key.split(',').map(Number);
       if (tx < x0 - 1 || tx > x1 + 1 || ty < y0 - 2 || ty > y1 + 1) continue;
       ents.push({ y: ty * T + T - (o.type === 'stump' ? 8 : 0), draw: () => drawObj(o, tx, ty, ff) });
+    }
+    for (const plot of state.farm) {
+      if (!plot.cropId && plot.healthy) continue;
+      ents.push({ y: plot.ty * T + T - 6, draw: () => drawCrop(plot) });
     }
     for (const d of state.world.drops) ents.push({ y: d.y, draw: () => drawDrop(d, gt) });
     for (const r of rt.rabbits.list) if (r.alive) ents.push({ y: r.y + 8, draw: () => drawRabbit(r, gt) });
@@ -212,6 +222,7 @@ export function createRenderer(rt) {
       }
       else if (o.type === 'door') ctx.drawImage(sp.props.door, X, Y - 14);
       else if (o.type === 'chest') { shadow(X + 16, Y + T - 4, 10); ctx.drawImage(sp.props.chest, X + 3, Y + 8); }
+      else if (o.type === 'stall') { shadow(X + 16, Y + T - 2, 15); ctx.drawImage(sp.props.stall, X - 16, Y - 26); }
       else if (o.type === 'bed') ctx.drawImage(sp.props.bed, X + 2, Y - 10);
       else if (o.type === 'table') ctx.drawImage(sp.props.table, X + 2, Y + 4);
       else if (o.type === 'site') {
@@ -221,6 +232,15 @@ export function createRenderer(rt) {
         ctx.strokeStyle = p.ui.border; ctx.strokeRect(o.ax * T + 56.5, o.ay * T - 5.5, 47, 6);
         ctx.fillStyle = p.ui.accent; ctx.fillRect(o.ax * T + 58, o.ay * T - 4, Math.round(44 * st), 3);
       }
+    }
+
+    function drawCrop(plot) {
+      const X = plot.tx * T, Y = plot.ty * T;
+      if (!plot.healthy) { ctx.drawImage(sp.props.cropWithered, X + 4, Y - 2); return; }
+      const frames = sp.crops[plot.cropId];
+      if (!frames) return;
+      const img = frames[Math.min(plot.stage, frames.length - 1)];
+      ctx.drawImage(img, X + 4, Y - 2);
     }
 
     function drawDrop(d, gt2) {

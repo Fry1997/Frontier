@@ -94,6 +94,23 @@ export function createFx(rt) {
     const p = rt.state.player;
     burst(p.x, p.y - 40, [pal().ui.accent], 6, { up: 25, grav: -10, sz: 1, life: 0.8 });
   });
+  bus.on('farm:tilled', ({ tx, ty }) => {
+    const p = pal();
+    burst(tx * T + 16, ty * T + 12, [p.dirtLo, p.dirtSpot], 8, { up: 30, life: 0.5 });
+  });
+  bus.on('farm:planted', ({ tx, ty }) => float('PLANTED', tx * T + 16, ty * T - 6, pal().ui.good));
+  bus.on('farm:watered', ({ tx, ty }) => {
+    const p = pal();
+    burst(tx * T + 16, ty * T + 6, [p.waterHi, p.foam], 6, { up: 35, grav: 150, sz: 1, life: 0.5 });
+  });
+  bus.on('farm:harvested', ({ tx, ty }) => {
+    const p = pal();
+    burst(tx * T + 16, ty * T + 8, [p.canopyHi, p.canopy, p.ui.accent], 10, { up: 40, life: 0.7 });
+  });
+  bus.on('crop:withered', ({ tx, ty }) => {
+    burst(tx * T + 16, ty * T + 6, [pal().smoke], 6, { up: 15, grav: -5, flut: 1, life: 1 });
+  });
+  bus.on('shop:sold', () => float('+COIN', rt.state.player.x, rt.state.player.y - 56, pal().buckle));
   bus.on('quest:finale', () => {
     finaleT = 9;
     const p = rt.state.player;

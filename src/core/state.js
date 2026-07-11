@@ -12,7 +12,7 @@
 
 import { MAPS, initialWorldObjects } from '../content/maps.js';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export const DAY_START_MINUTE = 8 * 60; // the first morning begins at 08:00
 

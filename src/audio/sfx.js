@@ -57,6 +57,7 @@ export class SFX {
   home()   { [392, 523, 659, 784].forEach((f, i) => this.tone(f, 0.24, 'triangle', 0.26, 0, i * 0.14)); }
   denied() { this.tone(170, 0.1, 'square', 0.22, -50); }
   ui()     { this.tone(440, 0.05, 'square', 0.12); }
+  coin()   { this.tone(988, 0.06, 'square', 0.2); this.tone(1319, 0.12, 'square', 0.2, 0, 0.06); }
 }
 
 // Map semantic events to sounds. Returns the SFX instance.
@@ -81,5 +82,14 @@ export function attachAudio(bus, sfx) {
   on('quest:finale',     () => sfx.home());
   on('action:denied',    () => sfx.denied());
   on('ui:click',         () => sfx.ui());
+  // Phase 4: farming + trade
+  on('farm:tilled',      () => sfx.place());
+  on('farm:planted',     () => sfx.pickup());
+  on('farm:watered',     () => sfx.drink());
+  on('farm:harvested',   () => sfx.craft());
+  on('farm:cleared',     () => sfx.poof());
+  on('crop:withered',    () => sfx.denied());
+  on('shop:bought',      () => sfx.coin());
+  on('shop:sold',        () => sfx.coin());
   return sfx;
 }
