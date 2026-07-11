@@ -10,7 +10,17 @@ npx serve .        # or: python3 -m http.server
 
 Move with WASD / left-thumb joystick, act with **E** / the action button, craft with **C**.
 
-## Status — Phase 4 complete (Farming + economy)
+## Status — Phase 5 complete (The people)
+
+New in Phase 5:
+
+- **NPCs** (`state.npcs`, schema §3) — a content-defined cast (`src/content/npcs.js`): **Maro** the trader (resident, staffs his cart from day 1) and **Wren** the traveller (wanders in from day 2, gone by night). Arrivals are ensured on day rollover — works for fresh games, loads, and old saves alike.
+- **Schedules & routines** (`src/entities/schedule.js`) — minute-range → goal/place entries drive each NPC's live `activity` (tend / wander / rest / away); agents walk to their posts. **The cart trades only while Maro is tending — CLOSED at night.**
+- **Relationships & memory** (`src/sim/relationships.js`) — TALK grants +2 once per day; tiers stranger → acquaintance → friend; memory facts (`met`, `talked`) recorded on the NPC, capped so they forget the distant past.
+- **Dialogue** (`src/content/dialogue.js`) — data-driven lines keyed by tier, with a first-meeting line; shown in a tap-to-close panel with name + tier.
+- Villager sprites are colour-swapped procedural placeholders under `npc.<id>` asset ids.
+
+## Phase 4 (Farming + economy)
 
 New in Phase 4:
 

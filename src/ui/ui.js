@@ -54,6 +54,9 @@ export function createUI(wrap) {
   const shopPanel = el('div', 'craft-panel chest-panel hidden');
   wrap.appendChild(shopPanel);
 
+  const dialoguePanel = el('div', 'dialogue-panel hidden');
+  wrap.appendChild(dialoguePanel);
+
   const homeBanner = el('div', 'home-banner hidden', `
     <div class="home-title">HOME.</div>
     <div class="home-sub">THE CAMP IS YOURS.<br>PHASE 1 COMPLETE.</div>
@@ -82,6 +85,14 @@ export function createUI(wrap) {
     });
     rt.bus.on('ui:update', update);
     rt.bus.on('quest:finale', () => setTimeout(() => homeBanner.classList.remove('hidden'), 2400));
+    rt.bus.on('npc:talked', ({ name, line, tier }) => {
+      dialoguePanel.innerHTML = `
+        <div class="dp-name">${name}<span class="dp-tier">${tier.toUpperCase()}</span></div>
+        <div class="dp-line">${line}</div>
+        <div class="dp-hint">TAP TO CLOSE</div>`;
+      dialoguePanel.classList.remove('hidden');
+    });
+    dialoguePanel.addEventListener('pointerdown', () => dialoguePanel.classList.add('hidden'));
     update();
   }
 

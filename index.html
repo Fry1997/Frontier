@@ -112,6 +112,17 @@
   .ch-empty { color: rgba(247,239,219,0.35); font-size: 6px; letter-spacing: 1px; padding: 8px 2px; }
   .ch-hint { color: rgba(247,239,219,0.4); font-size: 6px; letter-spacing: 1px; text-align: center; margin-top: 10px; }
 
+  .dialogue-panel {
+    position: absolute; left: 50%; bottom: 150px; transform: translateX(-50%);
+    width: min(420px, calc(100vw - 24px)); background: rgba(30,20,28,0.96);
+    border: 3px solid #f2e3c2; border-radius: 12px; padding: 14px 16px;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.35); animation: fPop 0.18s ease-out; z-index: 6; cursor: pointer;
+  }
+  .dp-name { color: #e8a33d; font-size: 9px; letter-spacing: 2px; margin-bottom: 10px; }
+  .dp-tier { color: rgba(247,239,219,0.4); font-size: 6px; margin-left: 10px; letter-spacing: 1px; }
+  .dp-line { color: #f7efdb; font-size: 8px; line-height: 1.9; }
+  .dp-hint { color: rgba(247,239,219,0.35); font-size: 6px; letter-spacing: 1px; margin-top: 10px; text-align: right; }
+
   .home-banner {
     position: absolute; left: 50%; top: 15%; transform: translateX(-50%);
     background: rgba(30,20,28,0.95); border: 4px solid #e8a33d; border-radius: 14px;

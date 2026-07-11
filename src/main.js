@@ -12,6 +12,8 @@ import * as timeSys from './world/time.js';
 import { createResources } from './world/resources.js';
 import * as playerSys from './entities/player.js';
 import { createRabbits } from './entities/rabbits.js';
+import { createNpcs } from './entities/npc.js';
+import { NPC_DEFS } from './content/npcs.js';
 import * as crafting from './sim/crafting.js';
 import * as building from './sim/building.js';
 import * as needs from './sim/needs.js';
@@ -26,7 +28,7 @@ import { createFx } from './render/fx.js';
 import { createHud } from './render/hud.js';
 import { createUI } from './ui/ui.js';
 import { SFX, attachAudio } from './audio/sfx.js';
-import { PALETTES, HAIRS, buildSprites } from './assets/sprites.js';
+import { PALETTES, HAIRS, buildSprites, buildVillager } from './assets/sprites.js';
 
 const wrap = document.getElementById('wrap');
 const ui = createUI(wrap);
@@ -60,8 +62,17 @@ const rt = {
     palKey, hairKey,
     get pal() { return PALETTES[this.palKey]; },
     sprites: getSprites(palKey, hairKey),
+    villagers: {},
   },
 };
+
+const villagerCache = {};
+function refreshVillagers() {
+  for (const def of Object.values(NPC_DEFS)) {
+    rt.view.villagers[def.id] = (villagerCache[rt.view.palKey + ':' + def.id] ||= buildVillager(PALETTES[rt.view.palKey], def.look));
+  }
+}
+refreshVillagers();
 
 rt.input = createInput({ bus, els: ui.els, isActive: () => rt.session?.phase === 'game' });
 rt.fx = createFx(rt);
@@ -90,6 +101,7 @@ function attachState(state) {
   rt.rng = createRng(state.seed ^ (state.time.day * 2654435761));
   rt.tiles = createTileMap(state);
   rt.rabbits = createRabbits(rt);
+  rt.npcs = createNpcs(rt);
   rt.quests = createQuests(rt);
   resources = createResources(rt);
   if (autosave) autosave.detach();
@@ -114,6 +126,7 @@ function setPalette(k) {
   if (!PALETTES[k]) return;
   rt.view.palKey = k;
   rt.view.sprites = getSprites(k, rt.view.hairKey);
+  refreshVillagers();
   persistSettings();
   bus.emit('ui:update', {});
 }
@@ -222,6 +235,7 @@ const loop = createLoop({
     timeSys.update(rt.state, dt, bus);   // time
     resources.update(dt);                // world / resource renewal
     playerSys.update(rt, dt);            // player (+ drops pickup)
+    rt.npcs.update(dt);                  // people: schedules → activity → movement
     rt.rabbits.update(dt);               // critters
     building.update(rt, dt);             // sim: construction sites, home flag
     needs.update(rt.state, dt);          // sim: needs decay

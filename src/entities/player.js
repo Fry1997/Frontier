@@ -6,6 +6,7 @@
 import { okey } from '../core/state.js';
 import { ITEMS } from '../content/items.js';
 import { OBJECT_DEFS } from '../content/objects.js';
+import { SHOPS } from '../content/shops.js';
 import * as inv from '../sim/inventory.js';
 import * as needs from '../sim/needs.js';
 import * as crafting from '../sim/crafting.js';
@@ -51,10 +52,15 @@ export function actionCtx(rt) {
     return crafting.placeValid(rt) ? { k: 'place', label: 'PLACE' } : { k: 'blocked', label: "CAN'T" };
   }
   if (sp.cookT > 0) return { k: 'none', label: '...' };
-  if (inv.hasTool(state, 'axe')) {
+  {
+    // people before prey: a neighbour in reach is a conversation
     const [px, py] = facePoint(state);
-    for (const r of rt.rabbits.list) {
-      if (r.alive && Math.hypot(r.x - px, r.y - py) < 26) return { k: 'hunt', label: 'HUNT', r };
+    const npc = rt.npcs?.talkTarget(px, py);
+    if (npc) return { k: 'talk', label: 'TALK', npc };
+    if (inv.hasTool(state, 'axe')) {
+      for (const r of rt.rabbits.list) {
+        if (r.alive && Math.hypot(r.x - px, r.y - py) < 26) return { k: 'hunt', label: 'HUNT', r };
+      }
     }
   }
   const [fx, fy] = faceTile(state);
@@ -65,7 +71,12 @@ export function actionCtx(rt) {
   if (o && o.type === 'fire' && inv.count(state, 'meatRaw') > 0) return { k: 'cook', label: 'COOK' };
   if (o && o.type === 'chest') return { k: 'chest', label: 'OPEN', containerId: o.containerId };
   if (o && o.type === 'bed') return { k: 'sleep', label: 'SLEEP' };
-  if (o && OBJECT_DEFS[o.type]?.shopId) return { k: 'shop', label: 'TRADE', shopId: OBJECT_DEFS[o.type].shopId };
+  if (o && OBJECT_DEFS[o.type]?.shopId) {
+    const shopId = OBJECT_DEFS[o.type].shopId;
+    const owner = SHOPS[shopId]?.npcId;
+    if (owner && !rt.npcs?.onDuty(owner, 'tend')) return { k: 'noshop', label: 'CLOSED' };
+    return { k: 'shop', label: 'TRADE', shopId };
+  }
   // farming verbs on the faced tile
   const plot = farming.plotAt(state, fx, fy);
   if (plot) {
@@ -91,6 +102,12 @@ export function doAction(rt) {
   if (c.k === 'noaxe') {
     bus.emit('action:denied', {});
     bus.emit('fx:float', { str: 'NEED AN AXE!', x: state.player.x, y: state.player.y - 56, kind: 'bad' });
+    return;
+  }
+  if (c.k === 'talk') { rt.npcs.talk(c.npc); return; }
+  if (c.k === 'noshop') {
+    bus.emit('action:denied', {});
+    bus.emit('fx:float', { str: 'CLOSED FOR THE NIGHT', x: state.player.x, y: state.player.y - 56, kind: 'text' });
     return;
   }
   if (c.k === 'chop') { swing(session, () => hitTree(rt, c.o, c.fx, c.fy)); return; }

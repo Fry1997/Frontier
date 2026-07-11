@@ -169,6 +169,50 @@
       "constraints": ["same 24x26 frame as other crops", "final stage is the harvestable orange pumpkin"]
     },
     {
+      "requestId": "REQ-0010",
+      "assetId": "npc.maro",
+      "status": "requested",
+      "type": "character_sheet",
+      "purpose": "Maro the trader (Phase 5) — resident NPC who staffs the cart. Same sheet format as Arthur, no act state needed.",
+      "spec": {
+        "frameSize": { "w": 32, "h": 48 },
+        "states": [
+          { "name": "idle", "frames": 1, "directions": ["down", "up", "left", "right"] },
+          { "name": "walk", "frames": 4, "directions": ["down", "up", "left", "right"] }
+        ],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "maro.png + maro.json atlas",
+      "integratesAt": "assets/sprites/npcs/",
+      "priority": "medium",
+      "constraints": ["blue merchant tunic, tidy dark hair (current placeholder look)", "friendly, a little sly"]
+    },
+    {
+      "requestId": "REQ-0011",
+      "assetId": "npc.wren",
+      "status": "requested",
+      "type": "character_sheet",
+      "purpose": "Wren the traveller (Phase 5) — hooded wanderer, comes and goes by day.",
+      "spec": {
+        "frameSize": { "w": 32, "h": 48 },
+        "states": [
+          { "name": "idle", "frames": 1, "directions": ["down", "up", "left", "right"] },
+          { "name": "walk", "frames": 4, "directions": ["down", "up", "left", "right"] }
+        ],
+        "anchor": "bottom_center",
+        "sheetLayout": "grid_by_state",
+        "palette": "theme_agnostic",
+        "format": "png_rgba"
+      },
+      "naming": "wren.png + wren.json atlas",
+      "integratesAt": "assets/sprites/npcs/",
+      "priority": "medium",
+      "constraints": ["dusky plum hooded cloak (current placeholder look)", "reads as a wanderer — road-worn, curious"]
+    },
+    {
       "requestId": "REQ-0006",
       "assetId": "prop.wall_segment",
       "status": "requested",

@@ -856,6 +856,22 @@ export function buildSprites(p, hair = 'scruff') {
   };
 }
 
+// Villager sprites (Phase 5): the Arthur frame generator with per-NPC
+// colour overrides — placeholders under npc.<id> asset ids until hand-made
+// character sheets arrive.
+export function buildVillager(p, look) {
+  const p2 = { ...p, ...look };
+  const v = {};
+  for (const dir of ['down', 'up', 'right']) {
+    v[dir] = {
+      idle: arthurFrame(p2, dir, 'idle', 0, look.hairstyle),
+      walk: [0, 1, 2, 3].map(f => arthurFrame(p2, dir, 'walk', f, look.hairstyle)),
+    };
+  }
+  v.left = { idle: mirror(v.right.idle), walk: v.right.walk.map(mirror) };
+  return v;
+}
+
 export function makePortrait(p, hair) {
   return arthurFrame(p, 'down', 'idle', 0, hair).toDataURL();
 }

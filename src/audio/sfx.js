@@ -91,5 +91,9 @@ export function attachAudio(bus, sfx) {
   on('crop:withered',    () => sfx.denied());
   on('shop:bought',      () => sfx.coin());
   on('shop:sold',        () => sfx.coin());
+  // Phase 5: people
+  on('npc:talked',       () => sfx.ui());
+  on('npc:arrived',      () => sfx.quest());
+  on('relationship:tier', () => sfx.craft());
   return sfx;
 }

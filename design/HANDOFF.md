@@ -15,6 +15,8 @@ order; priority tells you where the value is.*
 | REQ-0003 | `prop.bed` | prop | medium | Bed (interior furniture, sleep target) |
 | REQ-0005 | `structure.roof_t2` | prop | medium | Tier-2 "Timber Home" roof (upgrade payoff) |
 | REQ-0007 | `prop.stall` | prop | medium | The wandering trader's cart (first shop) |
+| REQ-0010 | `npc.maro` | character_sheet | medium | Maro the trader (idle/walk, 4 dirs) |
+| REQ-0011 | `npc.wren` | character_sheet | medium | Wren the traveller (idle/walk, 4 dirs) |
 | REQ-0004 | `prop.table` | prop | low | Table (interior furniture) |
 | REQ-0006 | `prop.wall_segment` | prop | low | Freestanding fence/palisade segment |
 | REQ-0008 | `crops.turnip` | prop | low | Turnip growth stages (3 frames) |

@@ -6,8 +6,8 @@
 export const SHOPS = {
   'wandering-cart': {
     id: 'wandering-cart',
-    name: "TRADER'S CART",
-    npcId: null,
+    name: "MARO'S CART",
+    npcId: 'maro', // staffed since Phase 5 — trades only while he's tending
     stock: [
       { itemId: 'turnipSeed', price: 3 },
       { itemId: 'pumpkinSeed', price: 5 },

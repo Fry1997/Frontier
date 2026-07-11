@@ -114,6 +114,10 @@ export function createRenderer(rt) {
     }
     for (const d of state.world.drops) ents.push({ y: d.y, draw: () => drawDrop(d, gt) });
     for (const r of rt.rabbits.list) if (r.alive) ents.push({ y: r.y + 8, draw: () => drawRabbit(r, gt) });
+    for (const npc of state.npcs) {
+      if (npc.activity === 'away') continue;
+      ents.push({ y: npc.y, draw: () => drawNpc(npc) });
+    }
     ents.push({ y: player.y, draw: drawPlayer });
     if (session.placing) {
       const [ax, ay] = crafting.placeAnchor(rt);
@@ -265,6 +269,28 @@ export function createRenderer(rt) {
       const fr = hopping ? Math.floor(r.hopT) % 2 : (Math.floor(gt2 * 1.5 + r.x) % 6 === 0 ? 1 : 0);
       const hz = hopping ? Math.abs(Math.sin(r.hopT * Math.PI * 0.5)) * 4 : 0;
       ctx.drawImage(set[fr], Math.round(r.x - 10), Math.round(r.y - 12 - hz));
+    }
+
+    function drawNpc(npc) {
+      const v = rt.view.villagers?.[npc.id];
+      if (!v) return;
+      const m = rt.npcs.mv[npc.id] || { dir: 'down', moving: false, animT: 0 };
+      shadow(npc.x, npc.y + 2, 9);
+      const set = v[m.dir] || v.down;
+      const img = m.moving ? set.walk[Math.floor(m.animT) % 4] : set.idle;
+      ctx.drawImage(img, Math.round(npc.x - 16), Math.round(npc.y - 44));
+      // name tag when the player is close
+      if (Math.hypot(npc.x - player.x, npc.y - player.y) < 70) {
+        ctx.font = '8px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = p.outline;
+        ctx.fillText(npc.name, Math.round(npc.x) + 1, Math.round(npc.y) - 51);
+        ctx.fillStyle = p.ui.text;
+        ctx.fillText(npc.name, Math.round(npc.x), Math.round(npc.y) - 52);
+        ctx.globalAlpha = 1;
+        ctx.textAlign = 'left';
+      }
     }
 
     function drawPlayer() {
